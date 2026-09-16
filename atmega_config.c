@@ -2,6 +2,12 @@
 #define BAUD 9600UL
 #define UBRR_VAL ((F_CPU) / (16 * BAUD) - 1) // teh baudrate formula
 
+#define SRAM_ADDR ((volatile uint8_t *)0x1800)
+#define ADC_ADDR ((volatile uint8_t *)0x1C00)
+
+
+
+
 #include <avr/io.h>
 #include <util/delay.h>
 #include <stdio.h>
@@ -116,11 +122,16 @@ void theLedShow(int timeOffset) {
     //latchOff();
 }
 
+int sram_address_min = 0x000;
+int sram_address_max = 0xBFF;
+int dac_address_min = 0xC00;
+int dac_address_max = 0xFFF;
+
 
 void SRAM_test(void)
     {
-		volatile char *ext_ram = (char *) 0x1800; // Start address for the SRAM
-        uint16_t ext_ram_size = 0x800;
+		volatile char *ext_ram = (char *) 0x1000; // Start address for the SRAM
+        uint16_t ext_ram_size = 0xC00;
         uint16_t write_errors = 0;
         uint16_t retrieval_errors = 0;
         printf("Starting SRAM test...\r\n");
@@ -156,7 +167,62 @@ void SRAM_test(void)
 void enable_external_sram(void) { // stolen directly from google after irritation <3
     // Set the SRE bit to enable the external memory interface
     MCUCR |= (1 << SRE);
+    // clear XMM2:XMM0 
+    SFIOR &=    ~((1 << XMM2) | (1 << XMM1) | (1 << XMM0));
+    
+    SFIOR |= (1 << XMM2);
+
+    EMCUCR != (1 << SRW11);
+    MCUCR &= ~(1 << SRW10);
 }
+
+volatile uint8_t dummy;
+volatile uint8_t *sram = (volatile uint8_t *)0x1800;
+volatile uint8_t *adc = (volatile uint8_t *) 0x1C00;
+
+
+void lets_test_the_fucking_ram(void) {
+    uint8_t value;
+
+    *SRAM_ADDR = 0x55;
+    value = *SRAM_ADDR;
+    printf("SRAM saved 0x55, read 0x%2X\r\n", value);
+    *SRAM_ADDR = 0xAA;
+    value = *SRAM_ADDR;
+    printf("SRAM saved 0xAA, read 0x%2X\r\n", value);
+}
+void lets_test_the_fucking_adc(void) {
+    uint8_t value;
+
+    *ADC_ADDR = 0x55;
+    value = *ADC_ADDR;
+    printf("ADC saved 0x55, read 0x%2X\r\n", value);
+    *ADC_ADDR = 0xAA;
+    value = *ADC_ADDR;
+    printf("ADC saved 0xAA, read 0x%2X\r\n", value);
+}
+
+void adc_clock_init(void) {
+    DDRB |= (1 << PB0);
+
+    // ctc mode no presclaer
+    TCCR0 = (1 << WGM01) |
+            (1 << COM00) |
+            (1 << CS00);
+    OCR0 = 2;
+}
+
+uint8_t adc_read_ain0(void) {
+    *ADC_ADDR = 0x90;
+    //_delay_ms(5);
+    *ADC_ADDR = 0x80;
+    _delay_ms(150);
+
+    //*ADC_ADDR = 0x90;
+    uint8_t result = *ADC_ADDR;
+    return result;
+}
+
 int main() {
     uart1_init();
     int theTime = 250;
@@ -164,7 +230,30 @@ int main() {
     int count = 0;
     fdevopen(uart_sendltr, uart_getltr);
     enable_external_sram();
+    //SRAM_test();
+    //lets_test_the_fucking_ram();
+    //lets_test_the_fucking_adc();
+    adc_clock_init();
+    *ADC_ADDR = 0x90;
+    while (1) {
+        uint8_t value = adc_read_ain0();
+        uint16_t millivolts = ((uint32_t)value * 2500UL) / 256UL;
+        printf("Read value from adc: %u (so approx: %u)\r\n", value, millivolts);
+        //lets_test_the_fucking_ram();
+        _delay_ms(500);
+    }
+    //lets_test_the_fucking_ram();
+
     
+    //while(1){
+        //    dummy = *((volatile uint8_t *) 0x1800);
+    //    _delay_ms(20);
+        //_delay_ms(1000);
+        //dummy = *adc;
+        //_delay_ms(1000);
+    //}
+
+
     //SRAM_test();
     //initializeLedShow();
     //latchInit();
