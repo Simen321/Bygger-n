@@ -88,7 +88,7 @@ void initializeLedShow() {
     DDRA = 0xFF; // or DDRA = 0b11111111, set all the ports on A to output
 }
 void latchInit(){
-    DDRB != (1 << PB1);
+    DDRB |= (1 << PB1);
 }
 void latchOn() { // trasparent
     PORTB |= (1 << PB1);
@@ -166,15 +166,20 @@ void SRAM_test(void)
 
 void enable_external_sram(void) { // stolen directly from google after irritation <3
     // Set the SRE bit to enable the external memory interface
-    MCUCR |= (1 << SRE);
+    //MCUCR |= (1 << SRE);
     // clear XMM2:XMM0 
     SFIOR &=    ~((1 << XMM2) | (1 << XMM1) | (1 << XMM0));
     
     SFIOR |= (1 << XMM2);
+    SFIOR &= ~(1 << XMBK);
 
-    EMCUCR != (1 << SRW11);
+    EMCUCR &= ~((1 << SRL2) | (1 << SRL1) | (1 << SRL0));
+
+    EMCUCR |= (1 << SRW11);
     MCUCR &= ~(1 << SRW10);
+    MCUCR |= (1 << SRE);
 }
+
 
 volatile uint8_t dummy;
 volatile uint8_t *sram = (volatile uint8_t *)0x1800;
@@ -209,18 +214,34 @@ void adc_clock_init(void) {
     TCCR0 = (1 << WGM01) |
             (1 << COM00) |
             (1 << CS00);
-    OCR0 = 2;
+    OCR0 = 0;
+}
+void adc_init(void) {
+    *ADC_ADDR = 0x91;
+    *ADC_ADDR = 0x81;
+    _delay_us(30);
+    volatile uint8_t result = *ADC_ADDR;
+    (void)result;
 }
 
-uint8_t adc_read_ain0(void) {
-    *ADC_ADDR = 0x90;
+uint8_t adc_read_ain0(uint8_t channel) {
     //_delay_ms(5);
-    *ADC_ADDR = 0x80;
-    _delay_ms(150);
+    /*
+    *ADC_ADDR= 0x91;
+    *ADC_ADDR = 0x81;
+    _delay_us(100);
+    *ADC_ADDR = 0x91;
+    //*ADC_ADDR = 0x91;
+    
+    return *ADC_ADDR;*/
+    *ADC_ADDR = 0x00;
+    _delay_us(30);
+    uint8_t data = 0;
+    for (uint8_t i = 0; i <= channel; i++) {
+        data = *ADC_ADDR;
+    }
+    return data;
 
-    //*ADC_ADDR = 0x90;
-    uint8_t result = *ADC_ADDR;
-    return result;
 }
 
 int main() {
@@ -230,15 +251,18 @@ int main() {
     int count = 0;
     fdevopen(uart_sendltr, uart_getltr);
     enable_external_sram();
-    //SRAM_test();
+    SRAM_test();
     //lets_test_the_fucking_ram();
     //lets_test_the_fucking_adc();
     adc_clock_init();
-    *ADC_ADDR = 0x90;
+    
     while (1) {
-        uint8_t value = adc_read_ain0();
-        uint16_t millivolts = ((uint32_t)value * 2500UL) / 256UL;
-        printf("Read value from adc: %u (so approx: %u)\r\n", value, millivolts);
+        for (uint8_t i = 0; i < 4; i++) {
+            uint8_t value = adc_read_ain0(i);
+            uint16_t millivolts = ((uint32_t)value * 2500UL) / 256UL;
+            printf("Read value from adc: %u (so approx: %u)\r\n", value, millivolts);
+        }
+        printf("\r\n");
         //lets_test_the_fucking_ram();
         _delay_ms(500);
     }
