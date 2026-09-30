@@ -1,5 +1,5 @@
 # List all source files to be compiled; separate with space
-SOURCE_FILES := atmega_config.c
+SOURCE_FILES := main.c source/adc.c source/utils.c source/joystick.c
 
 # Set this flag to "yes" (no quotes) to use JTAG; otherwise ISP (SPI) is used
 PROGRAM_WITH_JTAG := yes
@@ -25,6 +25,7 @@ $(BUILD_DIR):
 	mkdir $(BUILD_DIR)
 
 $(BUILD_DIR)/%.o: %.c | $(BUILD_DIR)
+	mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/main.hex: $(OBJECT_FILES) | $(BUILD_DIR)
