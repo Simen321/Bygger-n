@@ -42,7 +42,7 @@ void joystick_calibration()
     // for a certain time we just need to log the values and take the min max and average or something and decide what to set the values to
     
     uint8_t delay = 100;
-    int8_t time = 10000;
+    int8_t time = 3;
     uint8_t loop_count = 100;
     uint8_t xPos[loop_count];
     uint8_t yPos[loop_count];

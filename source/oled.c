@@ -4,12 +4,14 @@
 
 #include "../include/oled.h"
 #include "../include/spi.h"
-#include "../labtools/fonts.h"
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 #include <util/delay.h>
+
+#include <stdio.h>
+#include <stdlib.h>
 
 
 // using the external sram as the framebuffer, get 1kb from 0x1800 -> 0x1BFF
@@ -18,7 +20,7 @@ static volatile uint8_t * const oled_buffer = (volatile uint8_t *)OLED_FRAMEBUFF
 static uint8_t cursor_page = 0;
 static uint8_t cursor_column = 0;
 
-static volatile uint8_t oled_refreshrate_pending = 0;
+static volatile uint32_t oled_refreshrate_pending = 0;
 
 
 static void oled_timer_init(void)
@@ -70,11 +72,11 @@ static void oled_write_data(uint8_t data)
 
 void oled_reset(void)
 {
-    OLED_RST_LOW();
+    /*OLED_RST_LOW();
     _delay_ms(10);
 
     OLED_RST_HIGH();
-    _delay_ms(10);
+    _delay_ms(10);*/
 }
 
 
@@ -82,11 +84,11 @@ void oled_init(void)
 {
     OLED_CS_DDR  |= (1 << OLED_CS_PIN);
     OLED_DC_DDR  |= (1 << OLED_DC_PIN);
-    OLED_RST_DDR |= (1 << OLED_RST_PIN);
+    //OLED_RST_DDR |= (1 << OLED_RST_PIN);
 
     OLED_CS_HIGH();
     OLED_DC_HIGH();
-    OLED_RST_HIGH();
+    //OLED_RST_HIGH();
 
     oled_reset();
 
@@ -304,5 +306,89 @@ void oled_print(const char *str)
     while (*str)
     {
         oled_putchar(*str++);
+    }
+}
+
+void oled_draw_pixel(uint8_t x, uint8_t y)
+{
+    // Sjekk at vi er innenfor skjermens fysiske grenser
+    if (x >= OLED_WIDTH || y >= (OLED_PAGENR * 8))
+    {
+        return;
+    }
+
+    // Finn hvilken side (0-7) og hvilken bitrekke (0-7) i den biten pikselen tilhører
+    uint8_t page = y / 8;
+    uint8_t bit = y % 8;
+
+    // Beregn nøyaktig indeks i SRAM-framebufferet
+    uint16_t buffer_index = ((uint16_t)page * OLED_WIDTH) + x;
+
+    // Sett pikselen HIGH (enlighten pikselen) uten å slette eksisterende data i byten
+    oled_buffer[buffer_index] |= (1 << bit);
+}
+
+
+void oled_line(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
+{
+    int16_t dx =  abs(x1 - x0);
+    int16_t sx = x0 < x1 ? 1 : -1;
+    int16_t dy = -abs(y1 - y0);
+    int16_t sy = y0 < y1 ? 1 : -1;
+    int16_t err = dx + dy;
+    int16_t e2;
+
+    while (1)
+    {
+        oled_draw_pixel(x0, y0);
+        
+        if (x0 == x1 && y0 == y1) 
+        {
+            break;
+        }
+        
+        e2 = 2 * err;
+        
+        if (e2 >= dy)
+        {
+            err += dy;
+            x0 += sx;
+        }
+        if (e2 <= dx)
+        {
+            err += dx;
+            y0 += sy;
+        }
+    }
+}
+
+void oled_circle(uint8_t x_center, uint8_t y_center, uint8_t r)
+{
+    int16_t x = 0;
+    int16_t y = r;
+    int16_t d = 3 - (2 * r);
+
+    // Hjelpefunksjon for å tegne de 8 symmetriske punktene simultant
+    while (x <= y)
+    {
+        oled_draw_pixel(x_center + x, y_center + y);
+        oled_draw_pixel(x_center - x, y_center + y);
+        oled_draw_pixel(x_center + x, y_center - y);
+        oled_draw_pixel(x_center - x, y_center - y);
+        oled_draw_pixel(x_center + y, y_center + x);
+        oled_draw_pixel(x_center - y, y_center + x);
+        oled_draw_pixel(x_center + y, y_center - x);
+        oled_draw_pixel(x_center - y, y_center - x);
+
+        if (d < 0)
+        {
+            d += (4 * x) + 6;
+        }
+        else
+        {
+            d += (4 * (x - y)) + 10;
+            y--;
+        }
+        x++;
     }
 }

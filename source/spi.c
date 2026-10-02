@@ -1,6 +1,8 @@
 #include "../include/spi.h"
 
 #include <avr/io.h>
+#include <avr/delay.h>
+#include <stdio.h>
 
 /*void spi_init(void)
 {
@@ -18,35 +20,13 @@
 }*/
 void spi_init(void)
 {
-    /*
-     * MOSI
-     * SCK
-     * SS
-     */
-    DDRB |= (1 << PB5);
-    DDRB |= (1 << PB7);
-    DDRB |= (1 << PB4);
+    // Sett den EKTE maskinvare-SS (PB4), samt MOSI (PB5) og SCK (PB7) som utganger
+    DDRB |= (1 << PB4) | (1 << PB5) | (1 << PB7);
 
+    // Aktiver SPI, sett til Master
+    SPCR = (1 << SPE) | (1 << MSTR);
 
-    /*
-     * SPI enabled
-     * Master
-     *
-     * SPR1 = 0
-     * SPR0 = 0
-     *
-     * base = F_CPU / 4
-     */
-    SPCR =
-        (1 << SPE) |
-        (1 << MSTR);
-
-
-    /*
-     * Double SPI speed
-     *
-     * F_CPU / 2
-     */
+    // Dobbel hastighet (F_CPU / 2)
     SPSR |= (1 << SPI2X);
 }
 
@@ -59,4 +39,13 @@ uint8_t spi_transfer(uint8_t data)
     }
 
     return SPDR;
+}
+
+void spi_test() 
+{
+    uint8_t nmb = 100;
+
+    uint8_t rslt = spi_transfer(nmb);
+    printf("printed out %d\n\r", rslt);
+
 }

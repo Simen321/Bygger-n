@@ -1,8 +1,12 @@
 #include <stdlib.h>
+#include <stdint.h>
+#include <stdio.h>
+#include "../labtools/sram_test_cr.h"
+
     void SRAM_test(void)
     {
-		volatile char *ext_ram = (char *) 0x1800; // Start address for the SRAM
-        uint16_t ext_ram_size = 0x800;
+		volatile char *ext_ram = (char *) 0x1000; // Start address for the SRAM
+        uint16_t ext_ram_size = 0xC00; // fra 0x1C00 så er det ADC
         uint16_t write_errors = 0;
         uint16_t retrieval_errors = 0;
         printf("Starting SRAM test...\r\n");

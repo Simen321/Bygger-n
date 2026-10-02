@@ -1,6 +1,7 @@
 #include "../include/uart.h"
 #include <avr/io.h>
 
+
 void uart1_init(void){
     UBRR1H = (uint8_t)(UBRR_VAL >> 8);
     UBRR1L = (uint8_t)(UBRR_VAL);
