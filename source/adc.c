@@ -34,3 +34,24 @@ uint8_t adc_read(uint8_t channel)
     
     return data;
 }
+
+void adc_print_all()
+{
+    for (uint8_t i = 0; i < 4; i++) {
+            uint8_t value = adc_read(i);
+            uint16_t millivolts = ((uint32_t)value * 2500UL) / 256UL;
+            printf("Read value from adc: %u (so approx: %u)\r\n", value, millivolts);
+        }
+    printf("\r\n");
+}
+
+void lets_test_the_fucking_adc(void) {
+    uint8_t value;
+
+    *ADC_ADDR = 0x55;
+    value = *ADC_ADDR;
+    printf("ADC saved 0x55, read 0x%2X\r\n", value);
+    *ADC_ADDR = 0xAA;
+    value = *ADC_ADDR;
+    printf("ADC saved 0xAA, read 0x%2X\r\n", value);
+}

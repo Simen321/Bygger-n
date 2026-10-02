@@ -10,5 +10,7 @@ void adc_init();
 void adc_clock_init(void);
 uint8_t adc_read(uint8_t channel);
 
+void adc_print_all();
+void lets_test_the_fucking_adc(void);
 
 #endif
