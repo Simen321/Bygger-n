@@ -14,6 +14,7 @@
 #include <stdlib.h>
 
 
+
 // using the external sram as the framebuffer, get 1kb from 0x1800 -> 0x1BFF
 static volatile uint8_t * const oled_buffer = (volatile uint8_t *)OLED_FRAMEBUFFER_ADDR;
 
@@ -392,3 +393,34 @@ void oled_circle(uint8_t x_center, uint8_t y_center, uint8_t r)
         x++;
     }
 }
+
+
+void oled_box(uint8_t x0, uint8_t y0, uint8_t width, uint8_t hight, bool selected)
+{
+    int16_t x = width;
+    int16_t y = hight;
+    int16_t start_x = x0 - x/2; 
+    int16_t start_y = y0 - y/2;
+    int16_t start2_x = x0 + x/2;
+    int16_t start2_y = y0 + y/2;
+    uint8_t offset = 5;
+    
+    for (uint8_t i = start_x; i <= start_x + x; i++) {
+        for (uint8_t j = start_y; j <= start_y + y; j++) {
+            if (j== start_y || j == start_y+hight) {
+                oled_draw_pixel(i, j);
+            } else {
+                if ((i == start_x) ||(i == start_x + width)){
+                    oled_draw_pixel(i, j);
+                }
+            }
+        }
+    }
+    if (!selected) {return;}
+    for (uint8_t i = start2_y - offset; i <= start2_y; i++) {
+        for (uint8_t j = start_x; j <= start_x+x; j++) {
+            oled_draw_pixel(j,i);
+        }
+    }
+}
+

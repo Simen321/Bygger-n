@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "../labtools/fonts.h"
+#include <stdbool.h>
 
 #define OLED_WIDTH 128
 #define OLED_HEIGHT 64
@@ -66,6 +67,9 @@ void oled_line(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1);
 // Changing things around to try to make contineous refresh rate work
 void oled_update(void);
 void oled_task(void);
+
+void oled_box(uint8_t x0, uint8_t y0, uint8_t witdh, uint8_t higth, bool selected);
+
 
 
 #endif

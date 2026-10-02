@@ -17,6 +17,7 @@
 #include "include/uart.h"
 
 #include <math.h>
+#include <stdbool.h>
 
 int sram_address_min = 0x000;
 int sram_address_max = 0xBFF;
@@ -102,51 +103,23 @@ int main(void) {
 
     oled_pos(0,8);
     oled_print("morlb");
-    // Sentrum for banen (midten av OLED-skjermen: x=64, y=32)
-    uint8_t center_x = 64;
-    uint8_t center_y = 32;
-    
-    // Radius på banen den skal rotere rundt
-    uint8_t path_radius = 20; 
-    
-    // Radius på den faktiske sirkelen som tegnes/animeres
-    uint8_t circle_radius = 4;
 
-    // Vinkel i radianer (starter på 0)
-    double angle = 0.0;
+    oled_pos(0,0);
+    oled_clear();
+    oled_box(64,32, 126, 62, false);
+    oled_box(22, 12, 41, 20, true);
+    oled_box(64, 12, 41, 20, false);
+    oled_box(106, 12, 41, 20, false);
+    oled_pos(1,1);
+    oled_print("Home");
+    oled_pos(1,8);
+    oled_print("SRAM");
 
-    while (1)
+    oled_pos(1,15);
+    oled_print("DEMO");
+
+    while (1) 
     {
-        // 1. Tøm framebufferet i SRAM slik at den gamle sirkelen forsvinner (Double buffering)
-        // (Hvis du har tekst du vil beholde, må den printes på nytt etter clear, 
-        //  eller så må du kun viske ut den gamle sirkelen).
-        oled_clear();
-        
-        // Siden oled_clear() sletter alt, repliterer vi teksten her:
-        oled_pos(0, 0); oled_print("Hello!");
-        oled_pos(2, 0); oled_print("-----");
-        oled_pos(0, 8); oled_print("morlb");
-
-        // 2. Valgfritt: Tegn selve "banen" sirkelen skal følge (hvis du vil se den)
-        // oled_circle(center_x, center_y, path_radius);
-
-        // 3. Beregn den nye posisjonen til den animerte sirkelen basert på vinkelen
-        uint8_t anim_x = (uint8_t)(center_x + path_radius * cos(angle));
-        uint8_t anim_y = (uint8_t)(center_y + path_radius * sin(angle));
-
-        // 4. Tegn den animerte sirkelen på sin nye posisjon
-        oled_circle(anim_x, anim_y, circle_radius);
-
-        // 5. Øk vinkelen for neste bilderamme (jo høyere tall, jo raskere roterer den)
-        angle += 0.15; 
-        if (angle >= 2 * M_PI) {
-            angle = 0.0; // Nullstill vinkel når den har gått hele veien rundt
-        }
-
-        // 6. Vent litt så animasjonen ikke blir et eneste stort blinkende flimmer
-        _delay_ms(40);
-
-        // 7. La timeren din dytte det nye bildet til skjermen
         oled_task();
     }
 
