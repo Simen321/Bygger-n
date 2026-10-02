@@ -4,44 +4,16 @@
 
 #include <avr/io.h>
 #include <util/delay.h>
+#include <avr/interrupt.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "labtools/sram_test_cr.c"
 #include "include/adc.h"
 #include "include/joystick.h"
-
-
-int checkEdge(int currentEdge) { // Returns true if Rising Edge, returns false if Falling Edge
-    static int previousEdge = 0; // hope this will continue to hold the signal as is.
-    int output = 0;
-    // Rising edge:
-    if(!(previousEdge) && currentEdge) {
-        output = 1;
-    }
-
-    // Falling edge:
-    if ((previousEdge) && !(currentEdge)) {
-        output = 2;
-    }
-    // keep the currentState by setting previousState to it now
-    previousEdge = currentEdge;
-
-    return output;
-}
-
-void initializeLedShow() {
-    DDRA = 0xFF; // or DDRA = 0b11111111, set all the ports on A to output
-}
-void latchInit(){
-    DDRB |= (1 << PB1);
-}
-void latchOn() { // trasparent
-    PORTB |= (1 << PB1);
-}
-void latchOff() { // hold 
-    PORTB &= ~(1 << PB1);
-}
+#include "include/spi.h"
+#include "include/oled.h"
 
 int sram_address_min = 0x000;
 int sram_address_max = 0xBFF;
@@ -73,8 +45,41 @@ volatile uint8_t *adc = (volatile uint8_t *) 0x1C00;
 
 
 
-int main() {
+int main(void) {
+
     uart1_init();
+    unsigned char recieved_text[10];
+    int count = 0;
+    fdevopen(uart_sendltr, uart_getltr);
+    
+    enable_external_sram();
+    SRAM_test();
+
+    adc_clock_init();
+
+    // Main program should from now on be controlled thorugh the user interface on the OLED and navigation through joystick and touchscreens
+    // OLED:
+    spi_init();
+    oled_init();
+
+    sei();
+
+    oled_pos(0,0);
+    oled_print("Hello!");
+
+    oled_pos(2, 0);
+    oled_print("Simen")
+
+    while (1)
+    {
+        oled_task();
+
+    }
+
+    return 1;
+}
+
+    /*uart1_init();
     unsigned char recieved_text[10];
     int count = 0;
     fdevopen(uart_sendltr, uart_getltr);
@@ -93,7 +98,4 @@ int main() {
         printf("Joystick positions, X: %d Y: %d :)\r\n", x, y);
 
         _delay_ms(50);
-    }
-
-    return 1;
-}
+    }*/
