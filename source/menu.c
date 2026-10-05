@@ -42,7 +42,11 @@ void menu_move_left(void){
 }
 
 void menu_move_down(void){
-     if (menu_state == SUB_MENU){
+    if (menu_state == MAIN_MENU){      
+            menu_state = SUB_MENU;
+    }
+
+     else if (menu_state == SUB_MENU){
          if (sub_menu_index < SUB_MENU_SIZE -1){
         sub_menu_index++;
          }
@@ -53,6 +57,8 @@ void menu_move_up(void){
         sub_menu_index--;
     } else if (sub_menu_index == 0) {
         menu_state = MAIN_MENU;
+        sub_menu_index = 0;
+        selected_sub_menu = 0;
     }
 }
 
@@ -86,11 +92,11 @@ void update_menu_visuals(void){
         uint8_t j = i + 1;
         oled_box(j*(MAIN_MENU_WIDTH)-offset, (MAIN_MENU_HEIGHT/2), MAIN_MENU_WIDTH, MAIN_MENU_HEIGHT, 0);
         
-        if (selected_main_menu == i){
+        if (selected_main_menu == i ){
             // draw allready selected box
             oled_box(j*(MAIN_MENU_WIDTH)-offset, (MAIN_MENU_HEIGHT/2), MAIN_MENU_WIDTH, MAIN_MENU_HEIGHT, 1);
         }
-        if (main_menu_index == i) {
+        if (main_menu_index == i && menu_state==MAIN_MENU) {
             oled_box(j*(MAIN_MENU_WIDTH)-offset, (MAIN_MENU_HEIGHT/2), MAIN_MENU_WIDTH, MAIN_MENU_HEIGHT, 2);
         }
     }
@@ -108,11 +114,11 @@ void update_submenu_visuals(void){
         uint8_t j = i + 1;
         oled_box((SUB_MENU_WIDTH/2), (j*SUB_MENU_HEIGHT)-offset+MAIN_MENU_HEIGHT, SUB_MENU_WIDTH, SUB_MENU_HEIGHT, 0);
         
-        if (selected_sub_menu == i){
+        if (selected_sub_menu == i && menu_state==SUB_MENU){
             // draw allready selected box
             oled_box((SUB_MENU_WIDTH/2), j*(SUB_MENU_HEIGHT)-offset+MAIN_MENU_HEIGHT, SUB_MENU_WIDTH, SUB_MENU_HEIGHT, 1);
         }
-        if (sub_menu_index == i) {
+        if (sub_menu_index == i && menu_state==SUB_MENU) {
             oled_box((SUB_MENU_WIDTH/2), j*(SUB_MENU_HEIGHT)-offset+MAIN_MENU_HEIGHT, SUB_MENU_WIDTH, SUB_MENU_HEIGHT, 2);
         }
     }
