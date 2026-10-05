@@ -24,6 +24,43 @@ int sram_address_max = 0xBFF;
 int dac_address_min = 0xC00;
 int dac_address_max = 0xFFF;
 
+typedef struct __attribute__((packed)) {
+    union {
+        uint8_t right;
+        struct {
+            uint8_t R1:1;
+            uint8_t R2:1;
+            uint8_t R3:1;
+            uint8_t R4:1;
+            uint8_t R5:1;
+            uint8_t R6:1;
+        };
+    };
+    union {
+        uint8_t left;
+        struct {
+            uint8_t L1:1;
+            uint8_t L2:1;
+            uint8_t L3:1;
+            uint8_t L4:1;
+            uint8_t L5:1;
+            uint8_t L6:1;
+            uint8_t L7:1;
+        };
+    };
+    union {
+        uint8_t nav;
+        struct {
+            uint8_t NB:1;
+            uint8_t NR:1;
+            uint8_t ND:1;
+            uint8_t NL:1;
+            uint8_t NU:1;
+        };
+    };
+} Buttons;
+
+
 void enable_external_sram(void) { // stolen directly from google after irritation <3
     // Set the SRE bit to enable the external memory interface
     //MCUCR |= (1 <uart1_init< SRE);
