@@ -16,7 +16,7 @@
 #include "include/oled.h"
 #include "include/uart.h"
 #include "include/io.h"
-
+#include "include/menu.h"
 
 #include <math.h>
 #include <stdbool.h>
@@ -92,11 +92,33 @@ int main(void) {
     // Main program should from now on be controlled thorugh the user interface on the OLED and navigation through joystick and touchscreens
     // OLED:
     spi_init();
-    //oled_init();
+    oled_init();
 
     sei();
     while (1) {
         //io_print_all();
+        Buttons btns = io_read_buttons();
+        if (btns.NR) {
+            menu_move_right();
+        }
+        if (btns.NL) {
+            menu_move_left();
+        }
+        if (btns.NB) {
+            menu_click();
+        }
+        
+        if (btns.NU) {
+            menu_move_up();
+        }
+        if (btns.ND) {
+            menu_move_down();
+        }
+        uint8_t idx = menu_get_main_index();
+        printf("Main menu index: %d\n\r", idx);
+        update_menu_visuals();
+
+        oled_task();
         _delay_ms(50);
     }
         /*Touch Pad

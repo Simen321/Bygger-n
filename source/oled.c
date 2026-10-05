@@ -413,7 +413,7 @@ void oled_box(uint8_t x0, uint8_t y0, uint8_t width, uint8_t hight, uint8_t sele
     int16_t start_y = y0 - y/2;
     int16_t start2_x = x0 + x/2;
     int16_t start2_y = y0 + y/2;
-    uint8_t offset = 5;
+    uint8_t offset = 3;
     
     
     for (uint8_t i = start_x; i <= start_x + x; i++) {
@@ -431,7 +431,7 @@ void oled_box(uint8_t x0, uint8_t y0, uint8_t width, uint8_t hight, uint8_t sele
 
     if (selected == 0) {return;}
 
-    if (selected == 1) {
+    if (selected == 2) {
         for (uint8_t i = start_x + offset; i <= start2_x - offset; i++) {
             for (uint8_t j = start_y + offset; j <= start2_y - offset; j++) {
                 if (i == start_x + offset || i == start2_x - offset ||
@@ -440,11 +440,11 @@ void oled_box(uint8_t x0, uint8_t y0, uint8_t width, uint8_t hight, uint8_t sele
                 }
             }
         }
-    } else if (selected == 2) {
+    } else if (selected == 1) {
         for (uint8_t i = start_x; i <= start2_x; i++) {
             for (uint8_t j = start_y; j <= start2_y; j++) {
-                if (i < start_x + offset || i > start2_x - offset ||
-                    j < start_y + offset || j > start2_y - offset) {
+                if (i < start_x + offset-1 || i > start2_x - offset+1 ||
+                    j < start_y + offset-1 || j > start2_y - offset+1) {
                     oled_draw_pixel(i, j);
                 }
             }

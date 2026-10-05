@@ -68,7 +68,7 @@ void oled_line(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1);
 void oled_update(void);
 void oled_task(void);
 
-void oled_box(uint8_t x0, uint8_t y0, uint8_t witdh, uint8_t higth, bool selected);
+void oled_box(uint8_t start_x, uint8_t start_y, uint8_t width, uint8_t height, uint8_t selected);
 
 
 
