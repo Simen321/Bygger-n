@@ -94,7 +94,8 @@ void oled_init(void)
     OLED_DC_DDR  |= (1 << OLED_DC_PIN);
     //OLED_RST_DDR |= (1 << OLED_RST_PIN);
 
-    OLED_CS_HIGH();
+    //OLED_CS_HIGH();
+    spi_select_slave(2);
     OLED_DC_HIGH();
     //OLED_RST_HIGH();
 

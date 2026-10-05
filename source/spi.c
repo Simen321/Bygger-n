@@ -21,13 +21,17 @@
 void spi_init(void)
 {
     // Sett den EKTE maskinvare-SS (PB4), samt MOSI (PB5) og SCK (PB7) som utganger
-    DDRB |= (1 << PB4) | (1 << PB5) | (1 << PB7);
+    DDRB |= (1 << PB1) | (1 << PB4) | (1 << PB5) | (1 << PB7);
 
     // Aktiver SPI, sett til Master
     SPCR = (1 << SPE) | (1 << MSTR);
 
     // Dobbel hastighet (F_CPU / 2)
-    SPSR |= (1 << SPI2X);
+    //SPSR |= (1 << SPI2X);
+
+    PORTB |= (1 << PB1);
+    PORTB |= (1 << PB4);
+    DDRB &= ~(1 << PB6);
 }
 
 uint8_t selected = 0;
@@ -40,19 +44,32 @@ void spi_select_slave(uint8_t nmb)
     //PB1 = OLED CS
     //PB4 = IO CS
     // SS1 
-    if (nmb == 0) {
-        PORTB |= (1 << PB1); // low
-        PORTB |= (1 << PB4); // low
+    PORTB |= (1 << PB1); // HIGH
+    PORTB |= (1 << PB4); // HIGH
+    if (nmb == 1) {
+        PORTB &= ~(1 << PB4);
+    }
+    if (nmb == 2) { // OLED
+        PORTB &= ~(1 << PB1);
+    }
+    
+    /*if (nmb == 0) {
+        PORTB |= (1 << PB1); // HIGH
+        PORTB |= (1 << PB4); // HIGH
+        printf("selected nothing\n\r");
         selected = nmb;
     } else if (nmb == 1) {
         PORTB &= ~(1 << PB1); // low
         PORTB |= (1 << PB4); // high
+        printf("selected IO\n\r");
         selected = nmb;
     }else if (nmb == 2) {
         PORTB &= ~(1 << PB1); // LOW
         PORTB |= (1 << PB4); 
+        printf("selected OLED\n\r");
+
         selected = nmb;
-    }
+    }*/
 }
 
 
@@ -65,6 +82,7 @@ uint8_t spi_write_read(uint8_t data)
     {
 
     }
+    //_delay_us(40);
     //spi_select_slave(address);
     return SPDR;
 

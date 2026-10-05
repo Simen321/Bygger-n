@@ -91,10 +91,59 @@ int main(void) {
     // Main program should from now on be controlled thorugh the user interface on the OLED and navigation through joystick and touchscreens
     // OLED:
     spi_init();
-    oled_init();
+    //oled_init();
 
     sei();
+    while (1) {
+        /*Touch Pad
+        spi_select_slave(1);
+        uint8_t data_pad = spi_write_read(0x01);       
+        _delay_us(60);
+        uint8_t x_pad = spi_write_read(0);
+        _delay_us(2);   
+        uint8_t y_pad = spi_write_read(0);
+        _delay_us(2);   
+        uint8_t size_pad = spi_write_read(0);
+        printf("X, Y, Size: %d, %d, %d\n\r", x_pad, y_pad, size_pad);
+
+        // Touch Slider
+        spi_select_slave(1);
+        uint8_t data_slider = spi_write_read(0x02);       
+        _delay_us(60);
+        uint8_t x_slider = spi_write_read(0);
+        _delay_us(2);   
+        uint8_t size_slider = spi_write_read(0);
+        printf("X, Size: %d, %d\n\r", x_slider, size_slider);*/
+
+        //Joystick
+        spi_select_slave(1);
+        uint8_t data_joy = spi_write_read(0x03);       
+        _delay_us(60);
+        uint8_t x_joy = spi_write_read(0);
+        _delay_us(2);   
+        uint8_t y_joy = spi_write_read(0);
+        _delay_us(2);   
+        uint8_t btn_joy = spi_write_read(0);
+        printf("X, Y, Size: %d, %d, %d\n\r", x_joy, y_joy, btn_joy);
+        
+
+             
+        /*
+        data = spi_write_read(0x05);
+        _delay_us(60);
+        spi_write_read(5);
+        spi_write_read(0);
+        _delay_us(2);
+
+        spi_write_read(0);
+        spi_select_slave(0);
+        _delay_ms(100);*/
+    }
+
+
     
+
+    /*
     oled_pos(0,0);
     oled_print("Hello!");
 
@@ -121,7 +170,7 @@ int main(void) {
     while (1) 
     {
         oled_task();
-    }
+    }*/
 
     return 0;
 }
