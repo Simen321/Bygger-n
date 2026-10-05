@@ -51,23 +51,30 @@ ISR(TIMER1_COMPA_vect)
 
 static void oled_write_command(uint8_t command)
 {
-    OLED_CS_LOW();
+    //OLED_CS_LOW();
+    spi_select_slave(2);
+
     OLED_DC_LOW();
 
-    spi_transfer(command);
+    spi_write_read(command);
 
-    OLED_CS_HIGH();
+    //OLED_CS_HIGH();
+    spi_select_slave(0);
+
 }
 
 
 static void oled_write_data(uint8_t data)
 {
-    OLED_CS_LOW();
+    //OLED_CS_LOW();
     OLED_DC_HIGH();
+    spi_select_slave(2);
 
-    spi_transfer(data);
+    spi_write_read(data);
 
-    OLED_CS_HIGH();
+    spi_select_slave(0);
+
+    //OLED_CS_HIGH();
 }
 
 
@@ -162,15 +169,17 @@ void oled_update(void)
 
         uint16_t offset = (uint16_t)page * OLED_WIDTH;
 
-        OLED_CS_LOW();
+        //OLED_CS_LOW();
+        spi_select_slave(2);
         OLED_DC_HIGH();
 
         for (uint8_t column = 0; column < OLED_WIDTH; column++)
         {
-            spi_transfer(oled_buffer[offset + column]);
+            spi_write_read(oled_buffer[offset + column]);
         }
+        spi_select_slave(0);
 
-        OLED_CS_HIGH();
+        //OLED_CS_HIGH();
     }
 }
 

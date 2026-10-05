@@ -94,7 +94,7 @@ int main(void) {
     oled_init();
 
     sei();
-
+    
     oled_pos(0,0);
     oled_print("Hello!");
 

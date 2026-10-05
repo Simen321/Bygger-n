@@ -30,6 +30,61 @@ void spi_init(void)
     SPSR |= (1 << SPI2X);
 }
 
+uint8_t selected = 0;
+
+
+
+void spi_select_slave(uint8_t nmb) 
+{
+    // set SS signal low på den enheten vi vil ha. men da må vi skru av de andre
+    //PB1 = OLED CS
+    //PB4 = IO CS
+    // SS1 
+    if (nmb == 0) {
+        PORTB |= (1 << PB1); // low
+        PORTB |= (1 << PB4); // low
+        selected = nmb;
+    } else if (nmb == 1) {
+        PORTB &= ~(1 << PB1); // low
+        PORTB |= (1 << PB4); // high
+        selected = nmb;
+    }else if (nmb == 2) {
+        PORTB &= ~(1 << PB1); // LOW
+        PORTB |= (1 << PB4); 
+        selected = nmb;
+    }
+}
+
+
+uint8_t spi_write_read(uint8_t data)
+{
+    //spi_select_slave(address);
+
+    SPDR = data;
+    while (!(SPSR & (1 << SPIF)))
+    {
+
+    }
+    //spi_select_slave(address);
+    return SPDR;
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 uint8_t spi_transfer(uint8_t data)
 {
     SPDR = data;
