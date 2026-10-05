@@ -405,7 +405,7 @@ void oled_circle(uint8_t x_center, uint8_t y_center, uint8_t r)
 }
 
 
-void oled_box(uint8_t x0, uint8_t y0, uint8_t width, uint8_t hight, bool selected)
+void oled_box(uint8_t x0, uint8_t y0, uint8_t width, uint8_t hight, uint8_t selected)
 {
     int16_t x = width;
     int16_t y = hight;
@@ -426,11 +426,20 @@ void oled_box(uint8_t x0, uint8_t y0, uint8_t width, uint8_t hight, bool selecte
             }
         }
     }
-    if (!selected) {return;}
-    for (uint8_t i = start2_y - offset; i <= start2_y; i++) {
-        for (uint8_t j = start_x; j <= start_x+x; j++) {
-            oled_draw_pixel(j,i);
+    if (selected == 0) {return;}
+    if (selected == 1) {
+        for (uint8_t i = start2_y - offset; i <= start2_y; i++) {
+            for (uint8_t j = start_x; j <= start_x+x; j++) {
+                oled_draw_pixel(j,i);
+            }
+        }
+    } else if (selected == 2){
+        for (uint8_t i = start2_y - offset/2; i <= start2_y; i++) {
+            for (uint8_t j = start_x; j <= start_x+x; j++) {
+                oled_draw_pixel(j,i);
+            }
         }
     }
+
 }
 
