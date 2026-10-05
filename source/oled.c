@@ -405,55 +405,52 @@ void oled_circle(uint8_t x_center, uint8_t y_center, uint8_t r)
 }
 
 
-void oled_draw_rect(uint8_t start_x, uint8_t start_y, uint8_t width, uint8_t height, uint8_t offset, uint8_t selected)
+void oled_box(uint8_t x0, uint8_t y0, uint8_t width, uint8_t hight, uint8_t selected)
 {
-    uint8_t end_x = start_x + width;
-    uint8_t end_y = start_y + height;
-
-    uint8_t inner_x1 = start_x + offset;
-    uint8_t inner_y1 = start_y + offset;
-    uint8_t inner_x2 = end_x - offset;
-    uint8_t inner_y2 = end_y - offset;
-
-    for (uint8_t x = start_x; x <= end_x; x++) {
-        for (uint8_t y = start_y; y <= end_y; y++) {
-
-            // Outer rectangle
-            bool outer =
-                (x == start_x) ||
-                (x == end_x)   ||
-                (y == start_y) ||
-                (y == end_y);
-
-            // Inner rectangle
-            bool inside_inner =
-                x >= inner_x1 && x <= inner_x2 &&
-                y >= inner_y1 && y <= inner_y2;
-
-            bool inner_outline =
-                inside_inner &&
-                (
-                    x == inner_x1 ||
-                    x == inner_x2 ||
-                    y == inner_y1 ||
-                    y == inner_y2
-                );
-
-            if (outer) {
-                oled_draw_pixel(x, y);
-            }
-            else if (selected == 1 && inner_outline) {
-                // Selected state 1:
-                // inner outline
-                oled_draw_pixel(x, y);
-            }
-            else if (selected == 2 && inside_inner) {
-                // Selected state 2:
-                // filled inner rectangle
-                oled_draw_pixel(x, y);
+    int16_t x = width;
+    int16_t y = hight;
+    int16_t start_x = x0 - x/2; 
+    int16_t start_y = y0 - y/2;
+    int16_t start2_x = x0 + x/2;
+    int16_t start2_y = y0 + y/2;
+    uint8_t offset = 5;
+    
+    
+    for (uint8_t i = start_x; i <= start_x + x; i++) {
+        for (uint8_t j = start_y; j <= start_y + y; j++) {
+            if (j == start_y || j == start_y + hight) {
+                oled_draw_pixel(i, j);
+                
+            } else {
+                if ((i == start_x) || (i == start_x + width)) {
+                    oled_draw_pixel(i, j);
+                }
             }
         }
     }
+
+    if (selected == 0) {return;}
+
+    if (selected == 1) {
+        for (uint8_t i = start_x + offset; i <= start2_x - offset; i++) {
+            for (uint8_t j = start_y + offset; j <= start2_y - offset; j++) {
+                if (i == start_x + offset || i == start2_x - offset ||
+                    j == start_y + offset || j == start2_y - offset) {
+                    oled_draw_pixel(i, j);
+                }
+            }
+        }
+    } else if (selected == 2) {
+        for (uint8_t i = start_x; i <= start2_x; i++) {
+            for (uint8_t j = start_y; j <= start2_y; j++) {
+                if (i < start_x + offset || i > start2_x - offset ||
+                    j < start_y + offset || j > start2_y - offset) {
+                    oled_draw_pixel(i, j);
+                }
+            }
+        }
+    }
+
 }
 
 
