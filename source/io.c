@@ -1,5 +1,10 @@
 #include "../include/io.h"
 #include "../include/spi.h"
+#define F_CPU 4915200UL
+#define BAUD 9600UL
+#define UBRR_VAL ((F_CPU) / (16 * BAUD) - 1) // teh baudrate formula
+
+#include <util/delay.h>
 
 #define DELAY_TIME 60
 
@@ -94,7 +99,7 @@ Info io_read_info()
         info.timestamp[i] = curByte;
     }
 
-    for (uint8_t i = 19; i < 35; i++){
+    for (uint8_t i = 0; i < 15; i++){
         uint8_t curByte = spi_write_read(0);
         _delay_us(2);
         info.serial_number[i] = curByte;
@@ -109,3 +114,43 @@ void io_led_off(uint8_t idx);
 void io_led_toggle(uint8_t idx);
 void io_led_increment();
 void ui_led_decrease();
+
+void io_print_all()
+{
+    Touchpad touchpad = io_read_touchpad();
+    Slider slider = io_read_slider();
+    Joystick joystick = io_read_joystick();
+    Buttons buttons = io_read_buttons();
+    Info info = io_read_info();
+
+    printf("All read functions printout--\n\r");
+    printf("Touchpad: x: %d, y: %d, size: %d\n\r", touchpad.x, touchpad.y, touchpad.size);
+    printf("Slider: x: %d, size: %d\n\r", slider.x, slider.size);
+    printf("Joystick: x: %d, y: %d, btn: %d\n\r", joystick.x, joystick.y, joystick.btn);
+    printf("Buttons Left:   ");
+    for (int i = 6; i >= 0; i--){
+        printf("%u ", (buttons.left >> i) & 1);
+    }
+    printf("\n\r");
+
+    printf("Buttons Right:   ");
+    for (int i = 6; i >= 0; i--){
+        printf("%u ", (buttons.right >> i) & 1);
+    }
+    printf("\n\r");
+
+    printf("Buttons Nav:   ");
+    for (int i = 6; i >= 0; i--){
+        printf("%u ", (buttons.nav >> i) & 1);
+    }
+    printf("\n\r");
+
+    printf("Info: timestamp: %s, serialNr: ", info.timestamp);
+
+    for (int i = 0; i < 16; i++) {
+        printf("%02X", info.serial_number[i]);
+    }
+
+    printf("\n\r");
+
+};

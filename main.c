@@ -15,6 +15,8 @@
 #include "include/spi.h"
 #include "include/oled.h"
 #include "include/uart.h"
+#include "include/io.h"
+
 
 #include <math.h>
 #include <stdbool.h>
@@ -23,42 +25,6 @@ int sram_address_min = 0x000;
 int sram_address_max = 0xBFF;
 int dac_address_min = 0xC00;
 int dac_address_max = 0xFFF;
-
-typedef struct __attribute__((packed)) {
-    union {
-        uint8_t right;
-        struct {
-            uint8_t R1:1;
-            uint8_t R2:1;
-            uint8_t R3:1;
-            uint8_t R4:1;
-            uint8_t R5:1;
-            uint8_t R6:1;
-        };
-    };
-    union {
-        uint8_t left;
-        struct {
-            uint8_t L1:1;
-            uint8_t L2:1;
-            uint8_t L3:1;
-            uint8_t L4:1;
-            uint8_t L5:1;
-            uint8_t L6:1;
-            uint8_t L7:1;
-        };
-    };
-    union {
-        uint8_t nav;
-        struct {
-            uint8_t NB:1;
-            uint8_t NR:1;
-            uint8_t ND:1;
-            uint8_t NL:1;
-            uint8_t NU:1;
-        };
-    };
-} Buttons;
 
 
 void enable_external_sram(void) { // stolen directly from google after irritation <3
@@ -81,8 +47,6 @@ void enable_external_sram(void) { // stolen directly from google after irritatio
 volatile uint8_t dummy;
 volatile uint8_t *sram = (volatile uint8_t *)0x1800;
 volatile uint8_t *adc = (volatile uint8_t *) 0x1C00;
-
-
 
 
 
@@ -132,6 +96,9 @@ int main(void) {
 
     sei();
     while (1) {
+        //io_print_all();
+        _delay_ms(50);
+    }
         /*Touch Pad
         spi_select_slave(1);
         uint8_t data_pad = spi_write_read(0x01);       
@@ -150,7 +117,7 @@ int main(void) {
         uint8_t x_slider = spi_write_read(0);
         _delay_us(2);   
         uint8_t size_slider = spi_write_read(0);
-        printf("X, Size: %d, %d\n\r", x_slider, size_slider);*/
+        printf("X, Size: %d, %d\n\r", x_slider, size_slider);
 
         //Joystick
         spi_select_slave(1);
@@ -161,9 +128,23 @@ int main(void) {
         uint8_t y_joy = spi_write_read(0);
         _delay_us(2);   
         uint8_t btn_joy = spi_write_read(0);
-        printf("X, Y, Size: %d, %d, %d\n\r", x_joy, y_joy, btn_joy);
-        
+        printf("X, Y, Size: %d, %d, %d\n\r", x_joy, y_joy, btn_joy);*/
 
+
+        /*Buttons status;
+        spi_select_slave(1);
+        uint8_t data_btn = spi_write_read(0x04);       
+        _delay_us(60);
+
+
+        status.right = spi_write_read(0);
+        _delay_us(2);
+        status.left = spi_write_read(0);
+        _delay_us(2);
+        status.nav = spi_write_read(0);
+
+     
+        printf("Høy? %d\n\r", status.L7);*/
              
         /*
         data = spi_write_read(0x05);
@@ -175,7 +156,7 @@ int main(void) {
         spi_write_read(0);
         spi_select_slave(0);
         _delay_ms(100);*/
-    }
+    
 
 
     

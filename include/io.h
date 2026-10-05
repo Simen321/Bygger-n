@@ -66,8 +66,7 @@ Joystick io_read_joystick();
 Buttons io_read_buttons();
 Info io_read_info();
 
-uint8_t ledState = 0;
-uint8_t lastIndexChanged = 0;
+
 
 void io_led_on(uint8_t idx);
 void io_led_off(uint8_t idx);
@@ -75,5 +74,5 @@ void io_led_toggle(uint8_t idx);
 void io_led_increment();
 void ui_led_decrease();
 
-
+void io_print_all();
 #endif
