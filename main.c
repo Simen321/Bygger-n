@@ -17,6 +17,7 @@
 #include "include/uart.h"
 #include "include/io.h"
 #include "include/menu.h"
+#include "include/MCP2515.h"
 
 #include <math.h>
 #include <stdbool.h>

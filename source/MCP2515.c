@@ -5,22 +5,28 @@
 
 
 #include "../include/MCP2515.h"
+#include "../include/spi.h"
 #include <avr/io.h>
 #include <util/delay.h>
 #include <stdio.h>
 
-
+/*
 uint8_t MCP2515_write_read(uint8_t dataIn){
     uint8_t data;
     spi_select_slave(address);
     data = spi_write_read(dataIn);
     spi_select_slave(0);
     return data;
-}
+}*/
 
 uint8_t MCP2515_read(void) {
     spi_select_slave(3);
     uint8_t data = spi_write_read(0x03);
+    data = spi_write_read(14);
+    data = spi_write_read(0xFF);
+    uint8_t read1 = spi_write_read(0x00);
+    uint8_t read2 = spi_write_read(0x00);
+    printf("readbak is %d and %d", read1, read2);
     spi_select_slave(0);
     return data;
 }
@@ -29,7 +35,7 @@ void MCP2515_write(uint8_t address) {
     spi_select_slave(3);
     uint8_t data = spi_write_read(0x02);
     spi_select_slave(0);
-    return data;
+    
 }
 
 
