@@ -44,13 +44,19 @@ void spi_select_slave(uint8_t nmb)
     //PB1 = OLED CS
     //PB4 = IO CS
     // SS1 
+    
     PORTB |= (1 << PB1); // HIGH
     PORTB |= (1 << PB4); // HIGH
+    PORTE |= (1 << PE2); // HIGH
+
     if (nmb == 1) {
         PORTB &= ~(1 << PB4);
     }
     if (nmb == 2) { // OLED
         PORTB &= ~(1 << PB1);
+    }
+    if (nmb == 3) {
+        PORTE &= ~(1<<PE2);
     }
     
     /*if (nmb == 0) {

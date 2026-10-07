@@ -93,6 +93,7 @@ int main(void) {
     // OLED:
     spi_init();
     oled_init();
+    MCP2515_read();
 
     sei();
     while (1) {
