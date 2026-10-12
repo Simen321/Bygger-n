@@ -52,14 +52,14 @@ ISR(TIMER1_COMPA_vect)
 static void oled_write_command(uint8_t command)
 {
     //OLED_CS_LOW();
-    spi_select_slave(2);
+    spi_select_slave_n(2);
 
     OLED_DC_LOW();
 
-    spi_write_read(command);
+    spi_write_byte(command);
 
     //OLED_CS_HIGH();
-    spi_select_slave(0);
+    spi_select_slave_n(0);
 
 }
 
@@ -68,11 +68,11 @@ static void oled_write_data(uint8_t data)
 {
     //OLED_CS_LOW();
     OLED_DC_HIGH();
-    spi_select_slave(2);
+    spi_select_slave_n(2);
 
-    spi_write_read(data);
+    spi_write_byte(data);
 
-    spi_select_slave(0);
+    spi_select_slave_n(0);
 
     //OLED_CS_HIGH();
 }
@@ -95,7 +95,7 @@ void oled_init(void)
     //OLED_RST_DDR |= (1 << OLED_RST_PIN);
 
     //OLED_CS_HIGH();
-    spi_select_slave(2);
+    spi_select_slave_n(2);
     OLED_DC_HIGH();
     //OLED_RST_HIGH();
 
@@ -171,14 +171,14 @@ void oled_update(void)
         uint16_t offset = (uint16_t)page * OLED_WIDTH;
 
         //OLED_CS_LOW();
-        spi_select_slave(2);
+        spi_select_slave_n(2);
         OLED_DC_HIGH();
 
         for (uint8_t column = 0; column < OLED_WIDTH; column++)
         {
-            spi_write_read(oled_buffer[offset + column]);
+            spi_write_byte(oled_buffer[offset + column]);
         }
-        spi_select_slave(0);
+        spi_select_slave_n(0);
 
         //OLED_CS_HIGH();
     }

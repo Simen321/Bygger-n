@@ -13,41 +13,42 @@
 /*
 uint8_t MCP2515_write_read(uint8_t dataIn){
     uint8_t data;
-    spi_select_slave(address);
+    spi_select_slave_n(address);
     data = spi_write_read(dataIn);
-    spi_select_slave(0);
+    spi_select_slave_n(0);
     return data;
 }*/
 
 uint8_t MCP2515_read(void) {
-    spi_select_slave(3);
-    uint8_t data = spi_write_read(0x03);
-    data = spi_write_read(14);
-    data = spi_write_read(0xFF);
-    uint8_t read1 = spi_write_read(0x00);
-    uint8_t read2 = spi_write_read(0x00);
+    spi_select_slave_n(3);
+    spi_write_byte(0x03);
+    spi_write_byte(14);
+    spi_write_byte(0xFF);
+    uint8_t read1 = spi_read_byte();
+    uint8_t read2 = spi_read_byte();
     printf("readbak is %d and %d", read1, read2);
-    spi_select_slave(0);
+    spi_select_slave_n(0);
+    uint8_t data = 0; //temp
     return data;
 }
 
 void MCP2515_write(uint8_t address) {
-    spi_select_slave(3);
-    uint8_t data = spi_write_read(0x02);
-    spi_select_slave(0);
+    spi_select_slave_n(3);
+    spi_write_byte(0x02);
+    spi_select_slave_n(0);
     
 }
 
 
 
 void MCP2515_req_to_send(uint8_t tx_buffers){
-    spi_select_slave(3);
-    uint8_t data = spi_write_read(0x80 | TXB0); //(TXB1=0x82 and TXB2=0x84)
-    spi_select_slave(0);
+    spi_select_slave_n(3);
+    spi_write_byte(0x80 | TXB0); //(TXB1=0x82 and TXB2=0x84)
+    spi_select_slave_n(0);
 }
 
 uint8_t MCP2515_read_status(void){
-    spi_select_slave(3);
+    spi_select_slave_n(3);
     uint8_t data;
 
     return data;

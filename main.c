@@ -75,6 +75,7 @@ int main(void) {
     MCP2515_read();
 
     sei();
+    io_print_all();
     while (1) {
         //io_print_all();
         Buttons btns = io_read_buttons();
@@ -99,7 +100,7 @@ int main(void) {
         update_menu_visuals();
 
         oled_task();
-        _delay_ms(50);
+        _delay_ms(16);
     }
         /*Touch Pad
         spi_select_slave(1);

@@ -4,127 +4,61 @@
 #include <avr/delay.h>
 #include <stdio.h>
 
-/*void spi_init(void)
+uint8_t spi_write_read(uint8_t data)
 {
-    // set the: PB5,4,7 (husker ikke hva vi satte opp i labben)
-    // -MOSI
-    // -SCK
-    // -SS
-    // as outputs
-    DDRB |= (1 << PB5);
-    DDRB |= (1 << PB7);
-    DDRB |= (1 << PB4);
+    SPDR = data;
+    while (!(SPSR & (1 << SPIF))){  }
+    return SPDR;
 
-    // enable spi in master mode and clock rate?
-    SPCR = (1 << SPE) | (1 << MSTR) | (1 << SPR0);
-}*/
-void spi_init(void)
-{
+}
+
+void spi_init(void) {
     // Sett den EKTE maskinvare-SS (PB4), samt MOSI (PB5) og SCK (PB7) som utganger
     DDRB |= (1 << PB1) | (1 << PB4) | (1 << PB5) | (1 << PB7);
 
-    // Aktiver SPI, sett til Master
+    // Aktiver spi og konfigurer den til master
     SPCR = (1 << SPE) | (1 << MSTR);
 
-    // Dobbel hastighet (F_CPU / 2)
-    //SPSR |= (1 << SPI2X);
+    // Sett hastigheten til dobbel hastighet 
+    SPSR |= (1 << SPI2X); // SPI Status Register
 
     PORTB |= (1 << PB1);
     PORTB |= (1 << PB4);
     DDRB &= ~(1 << PB6);
 }
 
-uint8_t selected = 0;
-
-
-
-void spi_select_slave(uint8_t nmb) 
-{
-    // set SS signal low på den enheten vi vil ha. men da må vi skru av de andre
-    //PB1 = OLED CS
-    //PB4 = IO CS
-    // SS1 
-    
+void spi_select_slave_n(uint8_t n) {
     PORTB |= (1 << PB1); // HIGH
     PORTB |= (1 << PB4); // HIGH
     PORTE |= (1 << PE2); // HIGH
 
-    if (nmb == 1) {
-        PORTB &= ~(1 << PB4);
+    switch (n) {
+        case 1:
+            PORTB &= ~(1 << PB4); // CS-PIn IO
+        case 2:
+            PORTB &= ~(1 << PB1); // CS-pin OLED
+        case 3:
+            PORTE &= ~(1<<PE2); // CS-pin MCP2515
     }
-    if (nmb == 2) { // OLED
-        PORTB &= ~(1 << PB1);
-    }
-    if (nmb == 3) {
-        PORTE &= ~(1<<PE2);
-    }
-    
-    /*if (nmb == 0) {
-        PORTB |= (1 << PB1); // HIGH
-        PORTB |= (1 << PB4); // HIGH
-        printf("selected nothing\n\r");
-        selected = nmb;
-    } else if (nmb == 1) {
-        PORTB &= ~(1 << PB1); // low
-        PORTB |= (1 << PB4); // high
-        printf("selected IO\n\r");
-        selected = nmb;
-    }else if (nmb == 2) {
-        PORTB &= ~(1 << PB1); // LOW
-        PORTB |= (1 << PB4); 
-        printf("selected OLED\n\r");
-
-        selected = nmb;
-    }*/
 }
 
-
-uint8_t spi_write_read(uint8_t data)
-{
-    //spi_select_slave(address);
-
-    SPDR = data;
-    while (!(SPSR & (1 << SPIF)))
-    {
-
-    }
-    //_delay_us(40);
-    //spi_select_slave(address);
-    return SPDR;
-
+// make these just because lab notes says so, even though read and write are the same
+void spi_write_byte(uint8_t data) { 
+    (void)spi_write_read(data);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-uint8_t spi_transfer(uint8_t data)
-{
-    SPDR = data;
-    while (!(SPSR & (1 << SPIF)))
-    {
-
+void spi_write_n_bytes(const uint8_t *tx_buffer, size_t n) {
+    for (size_t i = 0; i < n; i++) {
+        spi_write_byte(tx_buffer[i]);
     }
-
-    return SPDR;
 }
 
-void spi_test() 
-{
-    uint8_t nmb = 100;
+uint8_t spi_read_byte(void) {
+    return spi_write_read(0xFF);
+}
 
-    uint8_t rslt = spi_transfer(nmb);
-    printf("printed out %d\n\r", rslt);
-
+void spi_read_n_bytes(uint8_t *rx_buffer, size_t n){
+    for (size_t i = 0; i < n; i++) {
+        rx_buffer[i] = spi_read_byte();
+    }
 }
