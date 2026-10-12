@@ -1,76 +1,104 @@
-#define F_CPU 4915200UL
-#define TXB0 0x01
-#define TXB1 0x02
-#define TXB2 0x04
-
-
 #include "../include/MCP2515.h"
 #include "../include/spi.h"
-#include <avr/io.h>
-#include <util/delay.h>
-#include <stdio.h>
-
-/*
-uint8_t MCP2515_write_read(uint8_t dataIn){
-    uint8_t data;
-    spi_select_slave_n(address);
-    data = spi_write_read(dataIn);
+void mcp_reset(void) {
+    spi_select_slave_n(3); // 3 is hardcoded for MCP2515 
+    spi_write_byte(RESET);
     spi_select_slave_n(0);
-    return data;
-}*/
-
-uint8_t MCP2515_read(void) {
-    spi_select_slave_n(3);
-    spi_write_byte(0x03);
-    spi_write_byte(14);
-    spi_write_byte(0xFF);
-    uint8_t read1 = spi_read_byte();
-    uint8_t read2 = spi_read_byte();
-    printf("readbak is %d and %d", read1, read2);
-    spi_select_slave_n(0);
-    uint8_t data = 0; //temp
-    return data;
 }
 
-void MCP2515_write(uint8_t address) {
-    spi_select_slave_n(3);
-    spi_write_byte(0x02);
-    spi_select_slave_n(0);
+void mcp_init(MODES_OF_OPERATION mode){
+    mcp_reset();
+    // CNF1, CNF2, CNF3
+    // TXRTSCTRL
+    // Filter registers
+    // Mask registers
+    printf("Mode value: %d\r\n", mode);
+
+    mcp_bit_modify(0x0F, 0xE0, mode); // Sets it into selected mode of operation
     
+
+    
+    
+    uint8_t data2 = mcp_read(0x0F);
+
+    
+
+
+    printf("got back read: %d \r\n", data2);
+    printf("got back read: ");
+    for (int i = 7; i >= 0; i--) {
+        printf("%d", (data2 >> i) & 1);
+    }
+    printf("\r\n");
+
+
+
 }
 
-
-
-void MCP2515_req_to_send(uint8_t tx_buffers){
+uint8_t mcp_read(uint8_t address) {
     spi_select_slave_n(3);
-    spi_write_byte(0x80 | TXB0); //(TXB1=0x82 and TXB2=0x84)
+    spi_write_byte(READ);
+    spi_write_byte(address); // read spesific register address
+    uint8_t data = spi_read_byte();
     spi_select_slave_n(0);
-}
-
-uint8_t MCP2515_read_status(void){
-    spi_select_slave_n(3);
-    uint8_t data;
-
     return data;
 }
 
-void MCP2515_bit_modify(uint8_t address, uint8_t mask, uint8_t data){
-
+uint8_t mcp_read_rx_buffer(uint8_t n, uint8_t m) {
+    spi_select_slave_n(3);
+    uint8_t cmd = READ_RX_BUFFER | (n << 2) | (m << 1); // sets the 1001 0nm0 cmd depending on inpt
+    spi_write_byte(cmd);
+    uint8_t data = spi_read_byte();
+    spi_select_slave_n(0);
+    return data;
 }
 
-void MCP2515_reset (void){
-
+void mcp_write(uint8_t address, uint8_t data){
+    spi_select_slave_n(3); // 3 is hardcoded for MCP2515 
+    spi_write_byte(WRITE);
+    spi_write_byte(address);
+    spi_write_byte(data);
+    spi_select_slave_n(0);
 }
 
-void MCP2515_print_all(void)
-{
-    // TODO: print relevante registre
+void mcp_load_tx_buffer(uint8_t a, uint8_t b, uint8_t c, uint8_t data){
+    spi_select_slave_n(3);
+    uint8_t cmd = LOAD_TX_BUFFER | (a << 2) | (b << 1) | (c << 0);
+    spi_write_byte(cmd);
+    spi_write_byte(data);
+    spi_select_slave_n(0);
+}
 
+void mcp_rts(uint8_t n){
+    spi_select_slave_n(3);
+    uint8_t cmd = RTS | (n & 0x07); // her blir da inputtn 1 11 eller 111.
+    spi_write_byte(cmd);
+    spi_select_slave_n(0);
+}
+
+uint8_t mcp_read_status(void) {
+    spi_select_slave_n(3);
+    spi_write_byte(READ_STATUS);
+    uint8_t data = spi_read_byte();
+    spi_select_slave_n(0);
+    return data;
+}
+
+uint8_t mcp_read_rx_status(void){
+    spi_select_slave_n(3);
+    spi_write_byte(RX_STATUS);
+    uint8_t data = spi_read_byte();
+    spi_select_slave_n(0);
+    return data;
+}
+
+void mcp_bit_modify(uint8_t address, uint8_t mask_byte, uint8_t data_byte){
+    spi_select_slave_n(3);
+    spi_write_byte(BIT_MODIFY);
+    spi_write_byte(address);
+    spi_write_byte(mask_byte);
+    spi_write_byte(data_byte);
+    spi_select_slave_n(0);
 }
 
 
-void lets_test_the_fucking_MCP2515(void)
-{
-    // TODO: tester MCP2515
-
-}

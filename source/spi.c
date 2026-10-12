@@ -25,6 +25,8 @@ void spi_init(void) {
     PORTB |= (1 << PB1);
     PORTB |= (1 << PB4);
     DDRB &= ~(1 << PB6);
+
+    DDRE |= (1 << PE2);
 }
 
 void spi_select_slave_n(uint8_t n) {
@@ -39,6 +41,8 @@ void spi_select_slave_n(uint8_t n) {
             PORTB &= ~(1 << PB1); // CS-pin OLED
         case 3:
             PORTE &= ~(1<<PE2); // CS-pin MCP2515
+        default:
+            break;  
     }
 }
 

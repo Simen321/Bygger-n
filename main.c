@@ -72,10 +72,10 @@ int main(void) {
     // OLED:
     spi_init();
     oled_init();
-    MCP2515_read();
 
     sei();
-    io_print_all();
+    mcp_init(LOOPBACK_MODE);
+
     while (1) {
         //io_print_all();
         Buttons btns = io_read_buttons();
@@ -96,7 +96,7 @@ int main(void) {
             menu_move_down();
         }
         uint8_t idx = menu_get_main_index();
-        printf("Main menu index: %d\n\r", idx);
+        //printf("Main menu index: %d\n\r", idx);
         update_menu_visuals();
 
         oled_task();

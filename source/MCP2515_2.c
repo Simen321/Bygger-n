@@ -1,0 +1,76 @@
+#define F_CPU 4915200UL
+#define TXB0 0x01
+#define TXB1 0x02
+#define TXB2 0x04
+
+
+#include "../include/MCP2515_2.h"
+#include "../include/spi.h"
+#include <avr/io.h>
+#include <util/delay.h>
+#include <stdio.h>
+
+/*
+uint8_t MCP2515_write_read(uint8_t dataIn){
+    uint8_t data;
+    spi_select_slave_n(address);
+    data = spi_write_read(dataIn);
+    spi_select_slave_n(0);
+    return data;
+}*/
+
+uint8_t MCP2515_read(void) {
+    spi_select_slave_n(3);
+    spi_write_byte(0x03);
+    spi_write_byte(14);
+    spi_write_byte(0xFF);
+    uint8_t read1 = spi_read_byte();
+    uint8_t read2 = spi_read_byte();
+    printf("readbak is %d and %d", read1, read2);
+    spi_select_slave_n(0);
+    uint8_t data = 0; //temp
+    return data;
+}
+
+void MCP2515_write(uint8_t address) {
+    spi_select_slave_n(3);
+    spi_write_byte(0x02);
+    spi_select_slave_n(0);
+    
+}
+
+
+
+void MCP2515_req_to_send(uint8_t tx_buffers){
+    spi_select_slave_n(3);
+    spi_write_byte(0x80 | TXB0); //(TXB1=0x82 and TXB2=0x84)
+    spi_select_slave_n(0);
+}
+
+uint8_t MCP2515_read_status(void){
+    spi_select_slave_n(3);
+    uint8_t data;
+
+    return data;
+}
+
+void MCP2515_bit_modify(uint8_t address, uint8_t mask, uint8_t data){
+
+}
+
+void MCP2515_reset (void){
+
+}
+
+void MCP2515_print_all(void)
+{
+    // TODO: print relevante registre
+
+}
+
+
+void lets_test_the_fucking_MCP2515(void)
+{
+    // TODO: tester MCP2515
+
+}
