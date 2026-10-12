@@ -1,7 +1,8 @@
 #include "../include/menu.h"
 #include <stdbool.h>
 #include "../include/oled.h"
-
+#include <stdio.h>
+#include "../include/adc.h"
 typedef enum {
     MAIN_MENU,
     SUB_MENU
@@ -18,7 +19,7 @@ uint8_t selected_sub_menu = 0;
 #define MAIN_MENU_HEIGHT 20
 
 #define SUB_MENU_SIZE 4
-#define SUB_MENU_WIDTH 60
+#define SUB_MENU_WIDTH 30
 #define SUB_MENU_HEIGHT 10
 
 
@@ -87,6 +88,33 @@ void menu_click(void){
 
 void update_menu_visuals(void){
     oled_clear();
+    oled_pos(1, 1);
+    oled_print("Home");    
+    oled_pos(1, 8);
+    oled_print("..");
+    oled_pos(1, 15);
+    oled_print("...");
+    oled_pos(3, 6);
+    uint8_t adc_in = adc_read(0);
+    char str[4];
+    snprintf(str, sizeof(str), "%u", (unsigned int)adc_in);
+    oled_print(str);
+
+    oled_pos(3, 10);
+    adc_in = adc_read(1);
+    snprintf(str, sizeof(str), "%u", (unsigned int)adc_in);
+    oled_print(str);
+
+    oled_pos(5, 6);
+    adc_in = adc_read(2);
+    snprintf(str, sizeof(str), "%u", (unsigned int)adc_in);
+    oled_print(str);
+
+    oled_pos(5, 10);
+    adc_in = adc_read(3);
+    snprintf(str, sizeof(str), "%u", (unsigned int)adc_in);
+    oled_print(str);
+
     uint8_t offset = MAIN_MENU_WIDTH/2;
     for (uint8_t i = 0; i < MAIN_MENU_SIZE; i++){
         uint8_t j = i + 1;
@@ -123,6 +151,17 @@ void update_submenu_visuals(void){
         }
     }
 }
+
+
+void menu_draw_page() {
+    switch (main_menu_index) {
+        case 0: // HOME
+            
+        case 1:
+        case 2:
+    }
+}
+
 
 uint8_t submenu_get_index(void)
 {

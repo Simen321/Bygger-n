@@ -279,7 +279,9 @@ void oled_pos(uint8_t row, uint8_t column)
     cursor_column = (uint8_t)pixel_column;
 }
 
-
+/*void oled_putchar_stream(char c, FILE *stream){
+    oled_putchar(c);
+}*/
 void oled_putchar(char c)
 {
     if (c < 32 || c > 126){

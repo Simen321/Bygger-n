@@ -70,6 +70,7 @@ void oled_task(void);
 
 void oled_box(uint8_t start_x, uint8_t start_y, uint8_t width, uint8_t height, uint8_t selected);
 
-
+void oled_write_console(char text_line[]);
+//void oled_putchar_stream(char c, FILE *stream);
 
 #endif

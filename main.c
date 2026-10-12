@@ -49,6 +49,11 @@ volatile uint8_t dummy;
 volatile uint8_t *sram = (volatile uint8_t *)0x1800;
 volatile uint8_t *adc = (volatile uint8_t *) 0x1C00;
 
+// Vår eksterne SRAM er fra 0x1000 til 0x1C00, som er da en størrelse på 3kb fra 0x1000. SRAM testen kjører da 3kb fra 0x1000.
+
+//FILE oled_stream = FDEV_SETUP_STREAM(oled_putchar_stream, NULL, _FDEV_SETUP_WRITE);
+//FILE uart_stream = FDEV_SETUP_STREAM(uart_sendltr, uart_getltr, _FDEV_SETUP_RW);
+
 
 
 int main(void) {
@@ -57,39 +62,12 @@ int main(void) {
     int count = 0;
     fdevopen(uart_sendltr, uart_getltr);
     
+
     enable_external_sram();
     SRAM_test();
 
     adc_clock_init();
 
-    /*joystick_calibration();
-    while (1) {
-        // adc_print_all();
-        // JOYSTICK
-        int16_t x = joystick_to_percent(joystickX_read());
-        int16_t y = joystick_to_percent(joystickY_read());
-        printf("Joystick positions, X: %d Y: %d :)\r\n", x, y);
-
-        _delay_ms(50);
-    }*/
-    /*
-    spi_init();
-    while (1) {
-        spi_test();
-        _delay_ms(100);
-    }*/
-
-    /*
-    uart1_init();
-    unsigned char recieved_text[10];
-    int count = 0;
-    fdevopen(uart_sendltr, uart_getltr);
-    
-    enable_external_sram();
-    SRAM_test();
-
-    adc_clock_init();
-*/
     // Main program should from now on be controlled thorugh the user interface on the OLED and navigation through joystick and touchscreens
     // OLED:
     spi_init();

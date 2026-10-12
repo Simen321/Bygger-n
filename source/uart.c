@@ -22,7 +22,7 @@ int uart_sendltr(char c, FILE *stream) {
     // UDRE1:   https://onlinedocs.microchip.com/oxy/GUID-EC8D3BAB-0B5E-454F-AB6E-6A7C91C6F103-en-US-3/GUID-ECC601AE-780D-4643-BE2B-CB7717DB713E.html
     // UCSR1A:  https://onlinedocs.microchip.com/oxy/GUID-85E9B23E-BE9C-47EA-AED9-E8719EA2F7AF-en-US-2/GUID-73CB1E14-0C43-4A15-AA94-3D8AF6E17C6A.html
     UDR1 = c;
-
+    //oled_putchar(c);
     return 0;
 }
 
