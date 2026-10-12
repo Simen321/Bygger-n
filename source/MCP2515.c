@@ -7,13 +7,25 @@ void mcp_reset(void) {
 }
 
 void mcp_init(MODES_OF_OPERATION mode){
+    
+    uint8_t data3 = mcp_read(0x0F);
+
+    
+
+
+    printf("got back read: %d \r\n", data3);
+    printf("got back read: ");
+    for (int i = 7; i >= 0; i--) {
+        printf("%d", (data3 >> i) & 1);
+    }
+    printf("\r\n");
+
     mcp_reset();
     // CNF1, CNF2, CNF3
     // TXRTSCTRL
     // Filter registers
     // Mask registers
     printf("Mode value: %d\r\n", mode);
-
     mcp_bit_modify(0x0F, 0xE0, mode); // Sets it into selected mode of operation
     
 

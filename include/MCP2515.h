@@ -34,10 +34,10 @@ typedef enum {
 
 
 typedef enum {
-    CONFIG_MODE = 0b1000,
-    NORMAL_MODE = 0b0000,
-    SLEEP_MODE = 0b0010,
-    LISTEN_ONLY_MODE = 0b0110,
+    CONFIG_MODE = 0x80,
+    NORMAL_MODE = 0x00,
+    SLEEP_MODE = 0x20,
+    LISTEN_ONLY_MODE = 0x60,
     LOOPBACK_MODE = 0x40
 } MODES_OF_OPERATION;
 
