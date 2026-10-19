@@ -24,6 +24,10 @@ typedef struct {
 } CAN_FRAME;
 
 
+void can_send();
+uint16_t can_crc(const uint8_t *data, size_t length);
+
+void can_init();
 
 
 

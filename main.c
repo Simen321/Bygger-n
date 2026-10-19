@@ -75,7 +75,22 @@ int main(void) {
 
     sei();
     mcp_init(LOOPBACK_MODE);
+    const uint8_t data[4] = {6, 7, 6, 7};
+    mcp_send_can_message(256,data, 4);
+    
+    uint16_t rx_id = 0;
+    uint8_t rx_data[8] = {0};
+    uint8_t rx_len = 0;
 
+    while (!mcp_receive_can_message(&rx_id, rx_data, &rx_len)) {
+        // Spinner her til meldingen dukker opp i RXB0
+    }
+
+
+    printf("Melding mottatt suksessfullt!\r\n");
+    printf("Mottatt ID: 0x%X (Forventet: 0x102)\r\n", rx_id);
+    printf("Mottatt Lengde: %d (Forventet: 4)\r\n", rx_len);
+    printf("Data: 0x%X, 0x%X, 0x%X, 0x%X\r\n", rx_data[0], rx_data[1], rx_data[2], rx_data[3]);
     while (1) {
         //io_print_all();
         Buttons btns = io_read_buttons();
@@ -102,96 +117,7 @@ int main(void) {
         oled_task();
         _delay_ms(16);
     }
-        /*Touch Pad
-        spi_select_slave(1);
-        uint8_t data_pad = spi_write_read(0x01);       
-        _delay_us(60);
-        uint8_t x_pad = spi_write_read(0);
-        _delay_us(2);   
-        uint8_t y_pad = spi_write_read(0);
-        _delay_us(2);   
-        uint8_t size_pad = spi_write_read(0);
-        printf("X, Y, Size: %d, %d, %d\n\r", x_pad, y_pad, size_pad);
-
-        // Touch Slider
-        spi_select_slave(1);
-        uint8_t data_slider = spi_write_read(0x02);       
-        _delay_us(60);
-        uint8_t x_slider = spi_write_read(0);
-        _delay_us(2);   
-        uint8_t size_slider = spi_write_read(0);
-        printf("X, Size: %d, %d\n\r", x_slider, size_slider);
-
-        //Joystick
-        spi_select_slave(1);
-        uint8_t data_joy = spi_write_read(0x03);       
-        _delay_us(60);
-        uint8_t x_joy = spi_write_read(0);
-        _delay_us(2);   
-        uint8_t y_joy = spi_write_read(0);
-        _delay_us(2);   
-        uint8_t btn_joy = spi_write_read(0);
-        printf("X, Y, Size: %d, %d, %d\n\r", x_joy, y_joy, btn_joy);*/
-
-
-        /*Buttons status;
-        spi_select_slave(1);
-        uint8_t data_btn = spi_write_read(0x04);       
-        _delay_us(60);
-
-
-        status.right = spi_write_read(0);
-        _delay_us(2);
-        status.left = spi_write_read(0);
-        _delay_us(2);
-        status.nav = spi_write_read(0);
-
-     
-        printf("Høy? %d\n\r", status.L7);*/
-             
-        /*
-        data = spi_write_read(0x05);
-        _delay_us(60);
-        spi_write_read(5);
-        spi_write_read(0);
-        _delay_us(2);
-
-        spi_write_read(0);
-        spi_select_slave(0);
-        _delay_ms(100);*/
-    
-
-
-    
-
-    /*
-    oled_pos(0,0);
-    oled_print("Hello!");
-
-    oled_pos(2, 0);
-    oled_print("-----");
-
-    oled_pos(0,8);
-    oled_print("morlb");
-
-    oled_pos(0,0);
-    oled_clear();
-    oled_box(64,32, 126, 62, false);
-    oled_box(22, 12, 41, 20, true);
-    oled_box(64, 12, 41, 20, false);
-    oled_box(106, 12, 41, 20, false);
-    oled_pos(1,1);
-    oled_print("Home");
-    oled_pos(1,8);
-    oled_print("SRAM");
-
-    oled_pos(1,15);
-    oled_print("DEMO");
-
-    while (1) 
-    {
-        oled_task();
-    }*/
+        
 
     return 0;
 }

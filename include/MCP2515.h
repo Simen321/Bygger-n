@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 /*
 read
@@ -56,5 +57,12 @@ uint8_t mcp_read_status(void);
 uint8_t mcp_read_rx_status(void);
 
 void mcp_bit_modify(uint8_t address, uint8_t mask_byte, uint8_t data_byte);
+
+
+
+void mcp_send_can_message(uint16_t id, const uint8_t *data, uint8_t length);
+bool mcp_receive_can_message(uint16_t *out_id, uint8_t *out_data, uint8_t *out_length);
+void mcp_load_tx_buffer_data(const uint8_t *data, uint8_t length);
+
 
 #endif
