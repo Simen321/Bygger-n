@@ -61,7 +61,8 @@ int main(void) {
     unsigned char recieved_text[10];
     int count = 0;
     fdevopen(uart_sendltr, uart_getltr);
-    
+    _delay_ms(1000);
+    printf("Booted..\n\r");
 
     enable_external_sram();
     SRAM_test();
@@ -74,6 +75,7 @@ int main(void) {
     oled_init();
 
     sei();
+    
     mcp_init(LOOPBACK_MODE);
     const uint8_t data[4] = {6, 7, 6, 7};
     mcp_send_can_message(256,data, 4);
@@ -82,16 +84,32 @@ int main(void) {
     uint8_t rx_data[8] = {0};
     uint8_t rx_len = 0;
 
-    while (!mcp_receive_can_message(&rx_id, rx_data, &rx_len)) {
-        // Spinner her til meldingen dukker opp i RXB0
+    uint16_t timeout = 0;
+
+    uint8_t canstat = mcp_read(0x0E);
+    uint8_t TXB0CTRL = mcp_read(0x30);
+    uint8_t CANINTF = mcp_read(0x2C);
+    uint8_t EFLG = mcp_read(0x0F);
+
+
+    if (mcp_receive_can_message(&rx_id, rx_data, &rx_len)) {
+        uart_sendltr('R', NULL);
+        printf("CANSTAT %d", canstat);
+        printf("TXB0CTRL %d", TXB0CTRL);
+        printf("CANINTF %d", CANINTF);
+        printf("EFLG %u", (unsigned int)EFLG);
+        //printf("TXB0CTRL: 0x%02X\r\n", mcp_read(0x30));
+        //printf("CANINTF: 0x%02X\r\n", mcp_read(0x2C));
+        //printf("EFLG:    0x%02X\r\n", mcp_read(0x2D));
+        //printf("CANCTRL: 0x%02X\r\n", mcp_read(0x0F));
     }
-
-
-    printf("Melding mottatt suksessfullt!\r\n");
-    printf("Mottatt ID: 0x%X (Forventet: 0x102)\r\n", rx_id);
-    printf("Mottatt Lengde: %d (Forventet: 4)\r\n", rx_len);
-    printf("Data: 0x%X, 0x%X, 0x%X, 0x%X\r\n", rx_data[0], rx_data[1], rx_data[2], rx_data[3]);
+    
     while (1) {
+        //printf("CANSTAT: 0x%02X\r\n", mcp_read(0x0E));
+        //printf("TXB0CTRL: 0x%02X\r\n", mcp_read(0x30));
+        //printf("CANINTF: 0x%02X\r\n", mcp_read(0x2C));
+        //printf("EFLG:    0x%02X\r\n", mcp_read(0x2D));
+        //printf("CANCTRL: 0x%02X\r\n", mcp_read(0x0F));
         //io_print_all();
         Buttons btns = io_read_buttons();
         if (btns.NR) {
@@ -113,12 +131,10 @@ int main(void) {
         uint8_t idx = menu_get_main_index();
         //printf("Main menu index: %d\n\r", idx);
         update_menu_visuals();
-
+        printf("ran oled loop");
         oled_task();
         _delay_ms(16);
     }
-        
-
     return 0;
 }
 

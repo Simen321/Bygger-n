@@ -37,10 +37,13 @@ void spi_select_slave_n(uint8_t n) {
     switch (n) {
         case 1:
             PORTB &= ~(1 << PB4); // CS-PIn IO
+            break;
         case 2:
             PORTB &= ~(1 << PB1); // CS-pin OLED
+            break;
         case 3:
             PORTE &= ~(1<<PE2); // CS-pin MCP2515
+            break;
         default:
             break;  
     }
