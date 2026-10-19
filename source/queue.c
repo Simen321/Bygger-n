@@ -31,7 +31,7 @@ void enqueue(Queue *q, int value)
 {
     if (isFull(q))
     {
-        printf("Queue is full\n");
+        //printf("Queue is full\n");
         return;
     }
     q->items[q->rear] = value;
@@ -44,7 +44,7 @@ void dequeue(Queue *q)
 {
     if (isEmpty(q))
     {
-        printf("Queue is empty\n");
+        //printf("Queue is empty\n");
         return;
     }
     q->front++;
@@ -56,7 +56,7 @@ int peek(Queue *q)
 {
     if (isEmpty(q))
     {
-        printf("Queue is empty\n");
+        //printf("Queue is empty\n");
         return -1; // return some default value or handle
                    // error differently
     }
@@ -68,14 +68,14 @@ void printQueue(Queue *q)
 {
     if (isEmpty(q))
     {
-        printf("Queue is empty\n");
+        //printf("Queue is empty\n");
         return;
     }
 
-    printf("Current Queue: ");
+    //printf("Current Queue: ");
     for (int i = q->front + 1; i < q->rear; i++)
     {
-        printf("%d ", q->items[i]);
+        //printf("%d ", q->items[i]);
     }
-    printf("\n");
+    //printf("\n");
 }

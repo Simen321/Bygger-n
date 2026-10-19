@@ -46,17 +46,17 @@ void joystick_calibration()
     uint8_t loop_count = 100;
     uint8_t xPos[loop_count];
     uint8_t yPos[loop_count];
-    printf("set count to %u", loop_count);
+    //printf("set count to %u", loop_count);
 
     for (int i = 0; i < loop_count; i++)
     {
         xPos[i] = joystickX_read();
         yPos[i] = joystickY_read();
-        printf("bruh2");
+        //printf("bruh2");
         _delay_ms(100);
     }
     median = find_median_uint8(xPos, loop_count);
-    printf("set median to %u", median);
+    //printf("set median to %u", median);
 };
 
 

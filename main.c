@@ -62,7 +62,7 @@ int main(void) {
     int count = 0;
     fdevopen(uart_sendltr, uart_getltr);
     _delay_ms(1000);
-    printf("Booted..\n\r");
+    //printf("Booted..\n\r");
 
     enable_external_sram();
     SRAM_test();
@@ -77,8 +77,8 @@ int main(void) {
     sei();
     
     mcp_init(LOOPBACK_MODE);
-    const uint8_t data[4] = {6, 7, 6, 7};
-    mcp_send_can_message(256,data, 4);
+    const uint8_t data[5] = {6,7,6,7,67};
+    mcp_send_can_message(0x101,data, 5);
     
     uint16_t rx_id = 0;
     uint8_t rx_data[8] = {0};
@@ -89,27 +89,28 @@ int main(void) {
     uint8_t canstat = mcp_read(0x0E);
     uint8_t TXB0CTRL = mcp_read(0x30);
     uint8_t CANINTF = mcp_read(0x2C);
-    uint8_t EFLG = mcp_read(0x0F);
+    uint8_t EFLG = mcp_read(0x2D);
 
 
     if (mcp_receive_can_message(&rx_id, rx_data, &rx_len)) {
         uart_sendltr('R', NULL);
-        printf("CANSTAT %d", canstat);
-        printf("TXB0CTRL %d", TXB0CTRL);
-        printf("CANINTF %d", CANINTF);
-        printf("EFLG %u", (unsigned int)EFLG);
-        //printf("TXB0CTRL: 0x%02X\r\n", mcp_read(0x30));
-        //printf("CANINTF: 0x%02X\r\n", mcp_read(0x2C));
-        //printf("EFLG:    0x%02X\r\n", mcp_read(0x2D));
-        //printf("CANCTRL: 0x%02X\r\n", mcp_read(0x0F));
+        printf("recieved id  %d\n\r", rx_id);
+        printf("length %d\n\r", rx_len);
+        for (uint8_t i = 0; i < rx_len && i < 8; i++) {
+            printf(" %u", (unsigned int)rx_data[i]);
+        }
+        ////printf("TXB0CTRL: 0x%02X\r\n", mcp_read(0x30));
+        ////printf("CANINTF: 0x%02X\r\n", mcp_read(0x2C));
+        ////printf("EFLG:    0x%02X\r\n", mcp_read(0x2D));
+        ////printf("CANCTRL: 0x%02X\r\n", mcp_read(0x0F));
     }
     
     while (1) {
-        //printf("CANSTAT: 0x%02X\r\n", mcp_read(0x0E));
-        //printf("TXB0CTRL: 0x%02X\r\n", mcp_read(0x30));
-        //printf("CANINTF: 0x%02X\r\n", mcp_read(0x2C));
-        //printf("EFLG:    0x%02X\r\n", mcp_read(0x2D));
-        //printf("CANCTRL: 0x%02X\r\n", mcp_read(0x0F));
+        ////printf("CANSTAT: 0x%02X\r\n", mcp_read(0x0E));
+        ////printf("TXB0CTRL: 0x%02X\r\n", mcp_read(0x30));
+        ////printf("CANINTF: 0x%02X\r\n", mcp_read(0x2C));
+        ////printf("EFLG:    0x%02X\r\n", mcp_read(0x2D));
+        ////printf("CANCTRL: 0x%02X\r\n", mcp_read(0x0F));
         //io_print_all();
         Buttons btns = io_read_buttons();
         if (btns.NR) {
@@ -129,9 +130,9 @@ int main(void) {
             menu_move_down();
         }
         uint8_t idx = menu_get_main_index();
-        //printf("Main menu index: %d\n\r", idx);
+        ////printf("Main menu index: %d\n\r", idx);
         update_menu_visuals();
-        printf("ran oled loop");
+        //printf("ran oled loop");
         oled_task();
         _delay_ms(16);
     }

@@ -26,7 +26,7 @@ uint8_t MCP2515_read(void) {
     spi_write_byte(0xFF);
     uint8_t read1 = spi_read_byte();
     uint8_t read2 = spi_read_byte();
-    printf("readbak is %d and %d", read1, read2);
+    //printf("readbak is %d and %d", read1, read2);
     spi_select_slave_n(0);
     uint8_t data = 0; //temp
     return data;

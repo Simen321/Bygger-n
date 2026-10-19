@@ -128,34 +128,34 @@ void io_print_all()
     Buttons buttons = io_read_buttons();
     Info info = io_read_info();
 
-    printf("All read functions printout--\n\r");
-    printf("Touchpad: x: %d, y: %d, size: %d\n\r", touchpad.x, touchpad.y, touchpad.size);
-    printf("Slider: x: %d, size: %d\n\r", slider.x, slider.size);
-    printf("Joystick: x: %d, y: %d, btn: %d\n\r", joystick.x, joystick.y, joystick.btn);
-    printf("Buttons Left:   ");
+    //printf("All read functions printout--\n\r");
+    //printf("Touchpad: x: %d, y: %d, size: %d\n\r", touchpad.x, touchpad.y, touchpad.size);
+    //printf("Slider: x: %d, size: %d\n\r", slider.x, slider.size);
+    //printf("Joystick: x: %d, y: %d, btn: %d\n\r", joystick.x, joystick.y, joystick.btn);
+    //printf("Buttons Left:   ");
     for (int i = 6; i >= 0; i--){
-        printf("%u ", (buttons.left >> i) & 1);
+        //printf("%u ", (buttons.left >> i) & 1);
     }
-    printf("\n\r");
+    //printf("\n\r");
 
-    printf("Buttons Right:   ");
+    //printf("Buttons Right:   ");
     for (int i = 6; i >= 0; i--){
-        printf("%u ", (buttons.right >> i) & 1);
+        //printf("%u ", (buttons.right >> i) & 1);
     }
-    printf("\n\r");
+    //printf("\n\r");
 
-    printf("Buttons Nav:   ");
+    //printf("Buttons Nav:   ");
     for (int i = 6; i >= 0; i--){
-        printf("%u ", (buttons.nav >> i) & 1);
+        //printf("%u ", (buttons.nav >> i) & 1);
     }
-    printf("\n\r");
+    //printf("\n\r");
 
-    printf("Info: timestamp: %s, serialNr: ", info.timestamp);
+    //printf("Info: timestamp: %s, serialNr: ", info.timestamp);
 
     for (int i = 0; i < 16; i++) {
-        printf("%02X", info.serial_number[i]);
+        //printf("%02X", info.serial_number[i]);
     }
 
-    printf("\n\r");
+    //printf("\n\r");
 
 };

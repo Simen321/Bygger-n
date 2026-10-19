@@ -34,6 +34,7 @@ $(BUILD_DIR)/main.hex: $(OBJECT_FILES) | $(BUILD_DIR)
 
 .PHONY: flash
 flash: $(BUILD_DIR)/main.hex
+	avr-size --mcu=${TARGET_CPU} ${BUILD_DIR}/a.out
 	avrdude -p $(TARGET_DEVICE) -c $(PROGRAMMER) -U flash:w:$(BUILD_DIR)/main.hex:i
 
 .PHONY: clean

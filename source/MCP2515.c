@@ -14,12 +14,12 @@ void mcp_init(MODES_OF_OPERATION mode){
     
 
 
-    printf("got back read: %d \r\n", data3);
-    printf("got back read: ");
+    //printf("got back read: %d \r\n", data3);
+    //printf("got back read: ");
     for (int i = 7; i >= 0; i--) {
-        printf("%d", (data3 >> i) & 1);
+        //printf("%d", (data3 >> i) & 1);
     }
-    printf("\r\n");
+    //printf("\r\n");
 
     mcp_reset();
         // our clock speed that is fed from the new crystal, at 16Mhz
@@ -85,10 +85,10 @@ void mcp_init(MODES_OF_OPERATION mode){
 
 
 
-    printf("Mode value: %d\r\n", mode);
+    //printf("Mode value: %d\r\n", mode);
     mcp_bit_modify(0x0F, 0xE0, mode); // Sets it into selected mode of operation
     
-    printf("got back read: ");
+    //printf("got back read: ");
 
     
     
@@ -101,17 +101,17 @@ void mcp_init(MODES_OF_OPERATION mode){
         actual_mode = mcp_read(0x0E) & 0xE0; // Les CANSTAT bit 7,6,5
         timeout++;
         if (timeout > 5000) {
-            printf("FEIL: Modusskifte tok for lang tid! Står fast i: 0x%X\r\n", actual_mode);
+            //printf("FEIL: Modusskifte tok for lang tid! Står fast i: 0x%X\r\n", actual_mode);
             break;
         }
     } while (actual_mode != mode);
-    printf("Brikken bekreftet modus! CANSTAT: 0x%X\r\n", mcp_read(0x0E));
-    printf("got back read: %d \r\n", data2);
-    printf("got back read: ");
+    //printf("Brikken bekreftet modus! CANSTAT: 0x%X\r\n", mcp_read(0x0E));
+    //printf("got back read: %d \r\n", data2);
+    //printf("got back read: ");
     for (int i = 7; i >= 0; i--) {
-        printf("%d", (data2 >> i) & 1);
+        //printf("%d", (data2 >> i) & 1);
     }
-    printf("\r\n");
+    //printf("\r\n");
 
 
 
@@ -225,7 +225,7 @@ void mcp_send_can_message(uint16_t id, const uint8_t *data, uint8_t length) {
     // mcp_rts(1) sender kommandoen for TX-Buffer 0
     mcp_rts(1);
 
-    printf("CAN: Melding sendt avsted!\r\n");
+    //printf("CAN: Melding sendt avsted!\r\n");
 }
 
 bool mcp_receive_can_message(
