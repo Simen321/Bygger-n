@@ -25,7 +25,7 @@ void mcp_init(MODES_OF_OPERATION mode){
         // our clock speed that is fed from the new crystal, at 16Mhz
     // CNF1, CNF2, CNF3
 
-    mcp_bit_modify(0x2A, 255, 0b00000000);
+    //mcp_bit_modify(0x2A, 255, 0b00000000);
     /*
     CNF1 ^^^
     0: JSW1  
@@ -38,7 +38,7 @@ void mcp_init(MODES_OF_OPERATION mode){
     0: BRP0
     */
 
-    mcp_bit_modify(0x29, 255, 0b10010010);
+    //mcp_bit_modify(0x29, 255, 0b10010010);
     /*
     CNF2 ^^^
     1: BLTMODE  - styrer phase 2 manuelt
@@ -51,7 +51,7 @@ void mcp_init(MODES_OF_OPERATION mode){
     0: PRSEG0
     */
 
-    mcp_bit_modify(0x28, 255, 0b00000011);
+    //mcp_bit_modify(0x28, 255, 0b00000011);
     /*
     CNF3 ^^^
     0: SOF  
@@ -63,7 +63,9 @@ void mcp_init(MODES_OF_OPERATION mode){
     1: PHSEG21  - 011:3 4Tq
     1: PHSEG20
     */
-
+mcp_bit_modify(0x2A, 0xFF, 0x00);
+mcp_bit_modify(0x29, 0xFF, 0xAC);
+mcp_bit_modify(0x28, 0xFF, 0x03);
     // ^Dette setter opp slik at mcp2515 leser av bussen etter 7 av 16Tq, som er ish 3/4 av bit-perioden
 
 

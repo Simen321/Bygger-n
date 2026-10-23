@@ -76,7 +76,7 @@ int main(void) {
 
     sei();
     
-    mcp_init(LOOPBACK_MODE);
+    mcp_init(NORMAL_MODE);
     const uint8_t data[5] = {6,7,6,7,67};
     mcp_send_can_message(0x101,data, 5);
     
@@ -86,24 +86,7 @@ int main(void) {
 
     uint16_t timeout = 0;
 
-    uint8_t canstat = mcp_read(0x0E);
-    uint8_t TXB0CTRL = mcp_read(0x30);
-    uint8_t CANINTF = mcp_read(0x2C);
-    uint8_t EFLG = mcp_read(0x2D);
 
-
-    if (mcp_receive_can_message(&rx_id, rx_data, &rx_len)) {
-        uart_sendltr('R', NULL);
-        printf("recieved id  %d\n\r", rx_id);
-        printf("length %d\n\r", rx_len);
-        for (uint8_t i = 0; i < rx_len && i < 8; i++) {
-            printf(" %u", (unsigned int)rx_data[i]);
-        }
-        ////printf("TXB0CTRL: 0x%02X\r\n", mcp_read(0x30));
-        ////printf("CANINTF: 0x%02X\r\n", mcp_read(0x2C));
-        ////printf("EFLG:    0x%02X\r\n", mcp_read(0x2D));
-        ////printf("CANCTRL: 0x%02X\r\n", mcp_read(0x0F));
-    }
     
     while (1) {
         ////printf("CANSTAT: 0x%02X\r\n", mcp_read(0x0E));
@@ -134,7 +117,26 @@ int main(void) {
         update_menu_visuals();
         //printf("ran oled loop");
         oled_task();
-        _delay_ms(16);
+        mcp_send_can_message(0x101,data, 5);
+    uint8_t canstat = mcp_read(0x0E);
+    uint8_t TXB0CTRL = mcp_read(0x30);
+    uint8_t CANINTF = mcp_read(0x2C);
+    uint8_t EFLG = mcp_read(0x2D);
+
+
+    if (mcp_receive_can_message(&rx_id, rx_data, &rx_len)) {
+        uart_sendltr('R', NULL);
+        printf("recieved id  %d\n\r", rx_id);
+        printf("length %d\n\r", rx_len);
+        for (uint8_t i = 0; i < rx_len && i < 8; i++) {
+            printf(" %u", (unsigned int)rx_data[i]);
+        }
+        ////printf("TXB0CTRL: 0x%02X\r\n", mcp_read(0x30));
+        ////printf("CANINTF: 0x%02X\r\n", mcp_read(0x2C));
+        ////printf("EFLG:    0x%02X\r\n", mcp_read(0x2D));
+        ////printf("CANCTRL: 0x%02X\r\n", mcp_read(0x0F));
+    }
+        _delay_ms(100);
     }
     return 0;
 }
