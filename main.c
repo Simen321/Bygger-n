@@ -89,6 +89,9 @@ int main(void) {
 
     
     while (1) {
+        Joystick joystickdata = io_read_joystick();
+        uint8_t joy_data[3] = {joystickdata.x, joystickdata.y, joystickdata.btn};
+        mcp_send_can_message(0x101, joy_data, 3);
         ////printf("CANSTAT: 0x%02X\r\n", mcp_read(0x0E));
         ////printf("TXB0CTRL: 0x%02X\r\n", mcp_read(0x30));
         ////printf("CANINTF: 0x%02X\r\n", mcp_read(0x2C));
@@ -117,7 +120,7 @@ int main(void) {
         update_menu_visuals();
         //printf("ran oled loop");
         oled_task();
-        mcp_send_can_message(0x101,data, 5);
+        //mcp_send_can_message(0x101,data, 5);
     uint8_t canstat = mcp_read(0x0E);
     uint8_t TXB0CTRL = mcp_read(0x30);
     uint8_t CANINTF = mcp_read(0x2C);
