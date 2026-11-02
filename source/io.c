@@ -88,6 +88,8 @@ Buttons io_read_buttons()
     status.nav = spi_read_byte();
 
     spi_select_slave_n(0);
+
+    //printf("debug ioread");
     return status;
 
 };
