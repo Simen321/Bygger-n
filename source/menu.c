@@ -9,7 +9,6 @@
 #include "../include/utils.h"
 
 #include <avr/pgmspace.h>
-#include <stdio.h>
 #include <string.h>
 
 // Screens:
@@ -21,7 +20,9 @@
 //   CONSOLE       log lines, up/down scrolls back in history. left goes back home
 //   SETTINGS      up/down picks a setting, click edits it (up/down changes, click/left done)
 //
-// Text goes through PSTR/snprintf_P so it stays in flash: the atmega162 only has 1 kB of ram.
+// Text goes through PSTR so it stays in flash: the atmega162 only has 1 kB of ram.
+// Numbers are written with put_uint instead of snprintf: printf-style formatting alone takes
+// about 1.5 kB of the 16 kB flash.
 
 typedef enum {
     SCREEN_HOME,
@@ -433,16 +434,57 @@ void menu_can_message(uint16_t id, const uint8_t *data, uint8_t length)
 }
 
 
+// ---------------------------------------------------------------- text helpers
+
+// write `value` in decimal at p, at least `digits` digits (zero padded). returns the new end
+static char *put_uint(char *p, uint32_t value, uint8_t digits)
+{
+    char reversed[10];
+    uint8_t n = 0;
+    do {
+        reversed[n++] = '0' + value % 10;
+        value /= 10;
+    } while (value || n < digits);
+    while (n) {
+        *p++ = reversed[--n];
+    }
+    *p = '\0';
+    return p;
+}
+
+// copy a flash string (PSTR) to p. returns the new end
+static char *put_P(char *p, const char *str)
+{
+    char c;
+    while ((c = pgm_read_byte(str++))) {
+        *p++ = c;
+    }
+    *p = '\0';
+    return p;
+}
+
+// copy a ram string to p. returns the new end
+static char *put_str(char *p, const char *str)
+{
+    while (*str) {
+        *p++ = *str++;
+    }
+    *p = '\0';
+    return p;
+}
+
+
 // ---------------------------------------------------------------- drawing
 
-// ticks -> "m:ss.t"
-static void format_time(char *buf, uint8_t size, uint32_t ticks)
+// ticks -> "m:ss.t" (buf needs 10 bytes)
+static void format_time(char *buf, uint32_t ticks)
 {
     uint32_t tenths = ticks * 10 / OLED_TICKS_PER_SECOND;
-    snprintf_P(buf, size, PSTR("%u:%02u.%u"),
-               (unsigned int)(tenths / 600),
-               (unsigned int)((tenths / 10) % 60),
-               (unsigned int)(tenths % 10));
+    char *p = put_uint(buf, tenths / 600, 1);
+    *p++ = ':';
+    p = put_uint(p, (tenths / 10) % 60, 2);
+    *p++ = '.';
+    put_uint(p, tenths % 10, 1);
 }
 
 // 0, 1, 2, 1, 0, 1, ... changes about 7 times a second, drives the pulsing outline
@@ -569,7 +611,10 @@ static void draw_player_title(int16_t y)
 {
     char text[12];
     if (player_count > 1) {
-        snprintf_P(text, sizeof(text), PSTR("PLAYER %u/%u"), current_player + 1, player_count);
+        char *p = put_P(text, PSTR("PLAYER "));
+        p = put_uint(p, current_player + 1, 1);
+        *p++ = '/';
+        put_uint(p, player_count, 1);
         gfx_text_centered(y, text, 1, GFX_SET);
     } else {
         gfx_text_centered_P(y, PSTR("PLAYER"), 1, GFX_SET);
@@ -597,8 +642,14 @@ static void draw_results(void)
         uint8_t is_winner = (i == winner && player_count > 1);
         char text[20];
         char time[10];
-        format_time(time, sizeof(time), player_time[i]);
-        snprintf_P(text, sizeof(text), is_winner ? PSTR("P%u  %s  WIN") : PSTR("P%u  %s"), i + 1, time);
+        format_time(time, player_time[i]);
+        char *p = put_P(text, PSTR("P"));
+        p = put_uint(p, i + 1, 1);
+        p = put_P(p, PSTR("  "));
+        p = put_str(p, time);
+        if (is_winner) {
+            put_P(p, PSTR("  WIN"));
+        }
 
         if (is_winner) {
             gfx_fill_rect(8, y, 112, 10, GFX_SET);
@@ -653,7 +704,7 @@ static void draw_game(uint32_t now)
 
         case GAME_PLAYING:
             draw_player_title(4);
-            format_time(time, sizeof(time), now - game_start_tick);
+            format_time(time, now - game_start_tick);
             gfx_text_centered(22, time, 2, GFX_SET);
             draw_exit_hint();
             break;
@@ -661,8 +712,11 @@ static void draw_game(uint32_t now)
         case GAME_OVER: {
             gfx_text_centered_P(2, PSTR("GAME OVER"), 2, GFX_SET);
             char text[20];
-            format_time(time, sizeof(time), player_time[current_player]);
-            snprintf_P(text, sizeof(text), PSTR("P%u time %s"), current_player + 1, time);
+            format_time(time, player_time[current_player]);
+            char *p = put_P(text, PSTR("P"));
+            p = put_uint(p, current_player + 1, 1);
+            p = put_P(p, PSTR(" time "));
+            put_str(p, time);
             gfx_text_centered(22, text, 1, GFX_SET);
             if (current_player + 1 < player_count) {
                 draw_button(14, 36, 100, 24, PSTR("NEXT PLAYER"), 1, 1, now);
@@ -683,49 +737,64 @@ static void draw_game(uint32_t now)
     }
 }
 
-// one row of the info page (max 20 characters)
-static void info_row(uint8_t row, char *buf, uint8_t size)
+// one row of the info page (max 20 characters, buf needs 22 bytes)
+static void info_row(uint8_t row, char *buf)
 {
     uint32_t seconds = oled_ticks() / OLED_TICKS_PER_SECOND;
+    char *p;
     switch (row) {
-        case 0: strcpy_P(buf, PSTR("Node 1  ATmega162")); break;
-        case 1: strcpy_P(buf, PSTR("Node 2  Arduino Due")); break;
-        case 2: strcpy_P(buf, PSTR("CAN     500 kbit/s")); break;
-        case 3: strcpy_P(buf, can_ok ? PSTR("Node 2  answering") : PSTR("Node 2  no answer")); break;
+        case 0: put_P(buf, PSTR("Node 1  ATmega162")); break;
+        case 1: put_P(buf, PSTR("Node 2  Arduino Due")); break;
+        case 2: put_P(buf, PSTR("CAN     500 kbit/s")); break;
+        case 3: put_P(buf, can_ok ? PSTR("Node 2  answering") : PSTR("Node 2  no answer")); break;
         case 4:
-            snprintf_P(buf, size, PSTR("Uptime  %u:%02u:%02u"),
-                       (unsigned int)(seconds / 3600),
-                       (unsigned int)((seconds / 60) % 60),
-                       (unsigned int)(seconds % 60));
+            p = put_P(buf, PSTR("Uptime  "));
+            p = put_uint(p, seconds / 3600, 1);
+            *p++ = ':';
+            p = put_uint(p, (seconds / 60) % 60, 2);
+            *p++ = ':';
+            put_uint(p, seconds % 60, 2);
             break;
-        case 5: snprintf_P(buf, size, PSTR("Free RAM %u bytes"), utils_free_ram()); break;
-        default: strcpy_P(buf, PSTR("Built   " __DATE__)); break;
+        case 5:
+            p = put_P(buf, PSTR("Free RAM "));
+            p = put_uint(p, utils_free_ram(), 1);
+            put_P(p, PSTR(" bytes"));
+            break;
+        default: put_P(buf, PSTR("Built   " __DATE__)); break;
     }
 }
 
-// one row of the sensors page (max 20 characters)
-static void sensor_row(uint8_t row, char *buf, uint8_t size)
+// one row of the sensors page (max 20 characters, buf needs 22 bytes)
+static void sensor_row(uint8_t row, char *buf)
 {
+    char *p;
+    uint8_t value;
     switch (row) {
-        case 0: snprintf_P(buf, size, PSTR("Joystick X  %u"), input_joystick.x); break;
-        case 1: snprintf_P(buf, size, PSTR("Joystick Y  %u"), input_joystick.y); break;
-        case 2: snprintf_P(buf, size, PSTR("Joy button  %u"), input_joystick.btn); break;
-        case 3: snprintf_P(buf, size, PSTR("Slider      %u"), input_slider.x); break;
-        case 4: snprintf_P(buf, size, PSTR("Slider size %u"), input_slider.size); break;
-        case 5: snprintf_P(buf, size, PSTR("Touch X     %u"), input_touchpad.x); break;
-        case 6: snprintf_P(buf, size, PSTR("Touch Y     %u"), input_touchpad.y); break;
-        case 7: snprintf_P(buf, size, PSTR("Touch size  %u"), input_touchpad.size); break;
-        default: snprintf_P(buf, size, PSTR("ADC%u        %u"), row - 8, adc_read(row - 8)); break;
+        case 0: p = put_P(buf, PSTR("Joystick X  ")); value = input_joystick.x;    break;
+        case 1: p = put_P(buf, PSTR("Joystick Y  ")); value = input_joystick.y;    break;
+        case 2: p = put_P(buf, PSTR("Joy button  ")); value = input_joystick.btn;  break;
+        case 3: p = put_P(buf, PSTR("Slider      ")); value = input_slider.x;      break;
+        case 4: p = put_P(buf, PSTR("Slider size ")); value = input_slider.size;   break;
+        case 5: p = put_P(buf, PSTR("Touch X     ")); value = input_touchpad.x;    break;
+        case 6: p = put_P(buf, PSTR("Touch Y     ")); value = input_touchpad.y;    break;
+        case 7: p = put_P(buf, PSTR("Touch size  ")); value = input_touchpad.size; break;
+        default:
+            p = put_P(buf, PSTR("ADC"));
+            p = put_uint(p, row - 8, 1);
+            p = put_P(p, PSTR("        "));
+            value = adc_read(row - 8);
+            break;
     }
+    put_uint(p, value, 1);
 }
 
 // header and rows from `row_text`, scrolled to page_top
-static void draw_text_page(const char *title_P, void (*row_text)(uint8_t, char *, uint8_t), uint8_t rows)
+static void draw_text_page(const char *title_P, void (*row_text)(uint8_t, char *), uint8_t rows)
 {
     draw_header(title_P);
     for (uint8_t i = 0; i < TEXT_ROWS_VISIBLE && page_top + i < rows; i++) {
         char text[22];
-        row_text(page_top + i, text, sizeof(text));
+        row_text(page_top + i, text);
         gfx_text(2, TEXT_TOP + i * TEXT_ROW_H, text, 1, GFX_SET);
     }
     draw_scrollbar(125, 11, 53, page_top, TEXT_ROWS_VISIBLE, rows);
@@ -745,19 +814,21 @@ static void draw_console(void)
     draw_scrollbar(126, 11, 53, first, CONSOLE_VISIBLE, count);
 }
 
-// value of a setting as text
-static void settings_value(uint8_t row, char *buf, uint8_t size)
+// value of a setting as text (buf needs 10 bytes)
+static void settings_value(uint8_t row, char *buf)
 {
     switch (row) {
         case ROW_SCHEME:
-            strcpy_P(buf, settings.scheme == CONTROL_VELOCITY ? PSTR("Velocity") : PSTR("Position"));
+            put_P(buf, settings.scheme == CONTROL_VELOCITY ? PSTR("Velocity") : PSTR("Position"));
             break;
         case ROW_MAX_SPEED:
-            snprintf_P(buf, size, PSTR("%u"), settings.max_speed);
+            put_uint(buf, settings.max_speed, 1);
             break;
         default: {
             uint16_t v = settings.pid[row - ROW_P];
-            snprintf_P(buf, size, PSTR("%u.%02u"), v / 100, v % 100);
+            char *p = put_uint(buf, v / 100, 1);
+            *p++ = '.';
+            put_uint(p, v % 100, 2);
             break;
         }
     }
@@ -795,7 +866,7 @@ static void draw_settings(void)
         }
 
         char value[10];
-        settings_value(row, value, sizeof(value));
+        settings_value(row, value);
         int16_t value_w = GFX_TEXT_WIDTH(strlen(value), 1);
         int16_t value_x = 117 - value_w;
 

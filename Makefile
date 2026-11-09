@@ -15,7 +15,11 @@ TARGET_CPU := atmega162
 TARGET_DEVICE := m162
 
 CC := avr-gcc
-CFLAGS := -O -std=c11 -mmcu=$(TARGET_CPU) -ggdb
+# -Os optimizes for size. -ffunction-sections/-fdata-sections put every function and table in
+# its own section so the linker (--gc-sections) can drop the ones nothing uses, like the unused
+# font8/font4 tables in fonts.c. the atmega162 only has 16 kB of flash.
+CFLAGS := -Os -std=c11 -mmcu=$(TARGET_CPU) -ggdb -ffunction-sections -fdata-sections
+LDFLAGS := -Wl,--gc-sections
 
 OBJECT_FILES = $(SOURCE_FILES:%.c=$(BUILD_DIR)/%.o)
 
@@ -29,7 +33,8 @@ $(BUILD_DIR)/%.o: %.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/main.hex: $(OBJECT_FILES) | $(BUILD_DIR)
-	$(CC) $(CFLAGS) $(OBJECT_FILES) -o $(BUILD_DIR)/a.out
+	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJECT_FILES) -o $(BUILD_DIR)/a.out
+	avr-size --mcu=$(TARGET_CPU) -C $(BUILD_DIR)/a.out
 	avr-objcopy -j .text -j .data -O ihex $(BUILD_DIR)/a.out $(BUILD_DIR)/main.hex
 
 .PHONY: flash
