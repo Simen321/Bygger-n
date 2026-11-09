@@ -18,6 +18,9 @@
 #include "include/io.h"
 #include "include/menu.h"
 #include "include/MCP2515.h"
+#include "include/console.h"
+#include "include/can_ids.h"
+#include <avr/pgmspace.h>
 
 #include <math.h>
 #include <stdbool.h>
@@ -77,86 +80,62 @@ int main(void) {
     sei();
     
     mcp_init(NORMAL_MODE);
-    const uint8_t data[5] = {6,7,6,7,67};
-    //mcp_send_can_message(0x101,data, 5);
-    
+    console_log_P(PSTR("node 1 started"));
+
     uint16_t rx_id = 0;
     uint8_t rx_data[8] = {0};
     uint8_t rx_len = 0;
 
-    uint16_t timeout = 0;
+    uint32_t last_tick = oled_ticks();
+    uint8_t previous_r2 = 0;
+    bool can_ok = true;
 
-    
     while (1) {
-        Joystick joystickdata = io_read_joystick();
-        uint8_t joy_data[3] = {joystickdata.x, joystickdata.y, joystickdata.btn};
-        mcp_send_can_message(0x101, joy_data, 3);
+        // empty both CAN receive buffers (game over, console text from node 2).
+        // done every loop, not just every tick, since the mcp2515 only holds two frames.
+        while (mcp_receive_can_message(&rx_id, rx_data, &rx_len)) {
+            menu_can_message(rx_id, rx_data, rx_len);
+        }
 
-        // slider and touchpad
+        // the rest runs once per oled refresh tick (60 Hz)
+        uint32_t now = oled_ticks();
+        if (now == last_tick) {
+            continue;
+        }
+        last_tick = now;
+
+        Joystick joystickdata = io_read_joystick();
         Slider sliderdata = io_read_slider();
         Touchpad touchpaddata = io_read_touchpad();
-        uint8_t slider_touch_packet[3] = {sliderdata.x, touchpaddata.x, touchpaddata.y};
-        mcp_send_can_message(0x102, slider_touch_packet, 3);
-
-        // buttons
         Buttons buttondata = io_read_buttons();
+
+        // inputs to node 2
+        uint8_t joy_data[3] = {joystickdata.x, joystickdata.y, joystickdata.btn};
+        uint8_t slider_touch_packet[3] = {sliderdata.x, touchpaddata.x, touchpaddata.y};
         uint8_t button_packet[1] = {buttondata.R2};
-        mcp_send_can_message(0x103, button_packet, 1);
+        bool sent = mcp_send_can_message(CAN_ID_JOYSTICK, joy_data, 3);
+        sent = mcp_send_can_message(CAN_ID_SLIDER, slider_touch_packet, 3) && sent;
+        sent = mcp_send_can_message(CAN_ID_BUTTONS, button_packet, 1) && sent;
 
+        // R2 fires the solenoid once per press, not every tick while held
+        if (buttondata.R2 && !previous_r2) {
+            mcp_send_can_message(CAN_ID_SOLENOID, button_packet, 1);
+        }
+        previous_r2 = buttondata.R2;
 
-        
-        
-
-        ////printf("CANSTAT: 0x%02X\r\n", mcp_read(0x0E));
-        ////printf("TXB0CTRL: 0x%02X\r\n", mcp_read(0x30));
-        ////printf("CANINTF: 0x%02X\r\n", mcp_read(0x2C));
-        ////printf("EFLG:    0x%02X\r\n", mcp_read(0x2D));
-        ////printf("CANCTRL: 0x%02X\r\n", mcp_read(0x0F));
-        //io_print_all();
-
-
-        Buttons btns = io_read_buttons();
-        if (btns.NR) {
-            menu_move_right();
-        }
-        if (btns.NL) {
-            menu_move_left();
-        }
-        if (btns.NB) {
-            menu_click();
-        }
-        
-        if (btns.NU) {
-            menu_move_up();
-        }
-        if (btns.ND) {
-            menu_move_down();
-        }
-        if (btns.R2) {
-            uint8_t signal[1] = {1};
-            mcp_send_can_message(0x100, signal, 1);
-        }
-
-        /*
-        if (mcp_receive_can_message(&rx_id, rx_data, &rx_len)) {
-            printf("recieved id  %d\n\r", rx_id);
-            printf("length %d\n\r", rx_len);
-            for (uint8_t i = 0; i < rx_len && i < 8; i++) {
-                printf(" %u", (unsigned int)rx_data[i]);
+        // tell on the console when node 2 stops or starts answering
+        if (sent != can_ok) {
+            can_ok = sent;
+            if (sent) {
+                console_log_P(PSTR("CAN: node 2 back"));
+            } else {
+                console_log_P(PSTR("CAN: node 2 no answer"));
             }
         }
-        */
-        //printf("aftr btn");
-        uint8_t idx = menu_get_main_index();
-        ////printf("Main menu index: %d\n\r", idx);
-        update_menu_visuals();
-        //printf("ran oled loop");
-        oled_task();
-        //mcp_send_can_message(0x101,data, 5);
 
-
-
-        //_delay_ms(16);
+        menu_update(buttondata, now);
+        menu_draw(now);
+        oled_update();
     }
     return 0;
 }

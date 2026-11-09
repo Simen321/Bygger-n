@@ -71,6 +71,13 @@ void oled_task(void);
 void oled_box(uint8_t start_x, uint8_t start_y, uint8_t width, uint8_t height, uint8_t selected);
 
 void oled_write_console(char text_line[]);
+
+// clock from the refresh timer, OLED_TICKS_PER_SECOND ticks per second
+#define OLED_TICKS_PER_SECOND OLED_REFRESH_RATE
+uint32_t oled_ticks(void);
+
+// framebuffer (OLED_FRAMEBUFFER_SIZE bytes, one byte = 8 vertical pixels, page by page)
+volatile uint8_t *oled_framebuffer(void);
 //void oled_putchar_stream(char c, FILE *stream);
 
 #endif

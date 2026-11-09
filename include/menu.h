@@ -1,28 +1,18 @@
 #ifndef MENU_H
 #define MENU_H
+
 #include <stdint.h>
+#include "io.h"
 
+// menu on the oled. call once per screen refresh:
+//   menu_update(buttons, now);  // handle the navigation buttons
+//   menu_draw(now);             // draw into the framebuffer, then oled_update()
+// `now` is oled_ticks().
 
+void menu_update(Buttons buttons, uint32_t now);
+void menu_draw(uint32_t now);
 
+// pass every CAN frame from node 2 here (game over, console text)
+void menu_can_message(uint16_t id, const uint8_t *data, uint8_t length);
 
-
-void menu_move_right(void);
-void menu_move_left(void);
-
-void menu_move_up(void);
-void menu_move_down(void);
-
-void menu_click(void);
-// menu_click
-
-
-
-void menu_goto_mainpage();
-void menu_goto_subpage();
-
-void update_menu_visuals(void);
-uint8_t menu_get_main_index();
-
-void update_submenu_visuals(void);
-uint8_t submenu_get_main_index();
 #endif

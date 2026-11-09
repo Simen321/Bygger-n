@@ -1,5 +1,10 @@
+#ifndef F_CPU
+#define F_CPU 4915200UL
+#endif
+
 #include "../include/MCP2515.h"
 #include "../include/spi.h"
+#include <util/delay.h>
 
 void mcp_reset(void) {
     spi_select_slave_n(3); // 3 is hardcoded for MCP2515 
@@ -22,6 +27,7 @@ void mcp_init(MODES_OF_OPERATION mode){
     //printf("\r\n");
 
     mcp_reset();
+    _delay_ms(1); // the mcp2515 needs a moment after reset before it accepts spi commands (oscillator start-up)
         // our clock speed that is fed from the new crystal, at 16Mhz
     // CNF1, CNF2, CNF3
 
@@ -72,18 +78,24 @@ mcp_bit_modify(0x28, 0xFF, 0x03);
     
     // TXRTSCTRL(0D): Transmit requrest to send control register
 
-    // bruker masken 0x7FC som er 111 1111 1100, for å sjekke disse bitsa i iden
-    // bruker filteret 0x100 som er 001 0000 0000
-    // da vil id 0x100, 0x101, 0x102, 0x103 sendes gjennom.
-    
-    mcp_write(0x60, 0x00);
-    // Maske
-    mcp_write(0x20, 0xFF);
-    mcp_write(0x21, 0x80);
+    // receive filters: node 2 sends on 0x200-0x2FF (see can_ids.h), everything else is ignored.
+    // mask 0x700 = only the top 3 id bits must match, filter 0x200.
+    //   mask/filter SIDH = id >> 3, SIDL = (id << 5) & 0xE0 (bit 3 EXIDE = 0, standard ids only)
+    // both receive buffers get the same mask and filters. BUKT (rollover) on RXB0 means a second
+    // frame goes to RXB1 when RXB0 is still full, so we can hold two frames between reads.
+    mcp_write(0x60, 0x04); // RXB0CTRL: RXM = 00 (use filters), BUKT = 1
+    mcp_write(0x70, 0x00); // RXB1CTRL: RXM = 00 (use filters)
 
-    // Filter
-    mcp_write(0x00, 0x20);
-    mcp_write(0x01, 0x00);
+    // masks: RXM0 (RXB0) and RXM1 (RXB1)
+    mcp_write(0x20, 0xE0); mcp_write(0x21, 0x00);
+    mcp_write(0x24, 0xE0); mcp_write(0x25, 0x00);
+
+    // filters: RXF0-1 belong to RXB0, RXF2-5 to RXB1
+    const uint8_t filter_sidh_addr[6] = {0x00, 0x04, 0x08, 0x10, 0x14, 0x18};
+    for (uint8_t i = 0; i < 6; i++) {
+        mcp_write(filter_sidh_addr[i], 0x40);     // RXFnSIDH: 0x200 >> 3
+        mcp_write(filter_sidh_addr[i] + 1, 0x00); // RXFnSIDL
+    }
 
 
 
@@ -202,10 +214,19 @@ void mcp_bit_modify(uint8_t address, uint8_t mask_byte, uint8_t data_byte){
 }
 
 
-void mcp_send_can_message(uint16_t id, const uint8_t *data, uint8_t length) {
+// how many times we check if the previous frame is sent before giving up (each check is ~20 us)
+#define MCP_TX_TIMEOUT 100
+
+bool mcp_send_can_message(uint16_t id, const uint8_t *data, uint8_t length) {
     // 1. Vent til TX-Buffer 0 er ledig (TXREQ-biten i TXB0CTRL må være 0)
+    // if nobody acks the frame (node 2 off or unplugged) the mcp2515 retries forever,
+    // so give up after a while instead of freezing the menu.
+    uint8_t timeout = MCP_TX_TIMEOUT;
     while (mcp_read(0x30) & 0x08) {
-        // Spinner her til forrige pakke er sendt
+        if (--timeout == 0) {
+            mcp_bit_modify(0x30, 0x08, 0x00); // clear TXREQ: abort the stuck frame
+            return false;
+        }
     }
 
     // 2. Formater 11-bit ID inn i brikkens registre
@@ -218,55 +239,61 @@ void mcp_send_can_message(uint16_t id, const uint8_t *data, uint8_t length) {
     // 3. Sett datalengde (DLC)
     mcp_write(0x35, length & 0x0F); // TXB0DLC
 
-    // 4. LAST INN DATA (Dette manglet i koden din!)
-    // Vi bruker din mcp_load_tx_buffer-funksjon. 
-    // Argumentene (0, 0, 1) forteller brikken at den skal starte på TXB0D0.
+    // 4. LAST INN DATA
+    // starter på TXB0D0.
     mcp_load_tx_buffer_data(data, length);
 
-    // 5. TRIGGER SENDINGEN (Dette manglet også!)
+    // 5. TRIGGER SENDINGEN
     // mcp_rts(1) sender kommandoen for TX-Buffer 0
     mcp_rts(1);
 
-    //printf("CAN: Melding sendt avsted!\r\n");
+    return true;
 }
 
+// reads one frame from RXB0 or RXB1. returns false if both are empty.
+// call it in a loop to empty both buffers.
 bool mcp_receive_can_message(
     uint16_t *out_id,
     uint8_t *out_data,
     uint8_t *out_length)
 {
-    // CANINTF ligger på 0x2C
+    // CANINTF ligger på 0x2C. bit 0 = RXB0 full, bit 1 = RXB1 full
     uint8_t interrupt_flags = mcp_read(0x2C);
 
-    // Sjekk om RXB0 inneholder en melding
-    if (!(interrupt_flags & 0x01)) {
+    uint8_t base;   // RXBnCTRL address, the other registers follow it
+    uint8_t flag;
+    if (interrupt_flags & 0x01) {
+        base = 0x60; // RXB0
+        flag = 0x01;
+    } else if (interrupt_flags & 0x02) {
+        base = 0x70; // RXB1
+        flag = 0x02;
+    } else {
         return false;
     }
 
     // Les standard CAN-ID
-    uint8_t sidh = mcp_read(0x61);
-    uint8_t sidl = mcp_read(0x62);
+    uint8_t sidh = mcp_read(base + 1);
+    uint8_t sidl = mcp_read(base + 2);
 
     *out_id = ((uint16_t)sidh << 3) | (sidl >> 5);
 
     // Les DLC
-    uint8_t dlc = mcp_read(0x65);
+    uint8_t dlc = mcp_read(base + 5);
     *out_length = dlc & 0x0F;
 
     // Beskytt mot ugyldig DLC
     if (*out_length > 8) {
-        *out_length = 0;
-        mcp_bit_modify(0x2C, 0x01, 0x00);
-        return false;
+        *out_length = 8;
     }
 
     // Les data
     for (uint8_t i = 0; i < *out_length; i++) {
-        out_data[i] = mcp_read(0x66 + i);
+        out_data[i] = mcp_read(base + 6 + i);
     }
 
-    // Nullstill RX0IF
-    mcp_bit_modify(0x2C, 0x01, 0x00);
+    // Nullstill RXnIF så bufferet kan ta imot en ny melding
+    mcp_bit_modify(0x2C, flag, 0x00);
 
     return true;
 }

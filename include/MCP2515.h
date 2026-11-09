@@ -60,7 +60,7 @@ void mcp_bit_modify(uint8_t address, uint8_t mask_byte, uint8_t data_byte);
 
 
 
-void mcp_send_can_message(uint16_t id, const uint8_t *data, uint8_t length);
+bool mcp_send_can_message(uint16_t id, const uint8_t *data, uint8_t length); // false if the previous frame was never acked
 bool mcp_receive_can_message(uint16_t *out_id, uint8_t *out_data, uint8_t *out_length);
 void mcp_load_tx_buffer_data(const uint8_t *data, uint8_t length);
 

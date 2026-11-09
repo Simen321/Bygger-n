@@ -22,6 +22,7 @@ static uint8_t cursor_page = 0;
 static uint8_t cursor_column = 0;
 
 static volatile uint32_t oled_refreshrate_pending = 0;
+static volatile uint32_t oled_tick_count = 0; // counts timer 1 interrupts, OLED_TICKS_PER_SECOND per second
 
 
 static void oled_timer_init(void)
@@ -44,6 +45,26 @@ static void oled_timer_init(void)
 ISR(TIMER1_COMPA_vect)
 {
     oled_refreshrate_pending = 1;
+    oled_tick_count++;
+}
+
+
+// ticks since start, OLED_TICKS_PER_SECOND (60) per second. used as the clock for menus and the game timer
+uint32_t oled_ticks(void)
+{
+    // a 32 bit read takes several instructions on the avr, so stop the interrupt from changing it halfway
+    uint8_t sreg = SREG;
+    cli();
+    uint32_t ticks = oled_tick_count;
+    SREG = sreg;
+    return ticks;
+}
+
+
+// the framebuffer in external sram, used by gfx.c to draw
+volatile uint8_t *oled_framebuffer(void)
+{
+    return oled_buffer;
 }
 
 
