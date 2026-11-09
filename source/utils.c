@@ -21,3 +21,11 @@ uint8_t find_median_uint8(uint8_t arr[], int n) {
         return (uint8_t)((sum + 1) / 2); // (sum + 1) / 2 handles correct integer rounding
     }
 }
+
+// free internal ram: the gap between the end of the heap (or the static variables when the
+// heap is unused) and the top of the stack. if this gets near 0 the stack overwrites variables.
+uint16_t utils_free_ram(void) {
+    extern char __heap_start, *__brkval;
+    char top_of_stack;
+    return (uint16_t)(&top_of_stack - (__brkval == 0 ? &__heap_start : __brkval));
+}

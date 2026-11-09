@@ -20,6 +20,7 @@
 #include "include/MCP2515.h"
 #include "include/console.h"
 #include "include/can_ids.h"
+#include "include/settings.h"
 #include <avr/pgmspace.h>
 
 #include <math.h>
@@ -69,6 +70,7 @@ int main(void) {
 
     enable_external_sram();
     SRAM_test();
+    console_init(); // the console history lives in external sram, so after the sram test
 
     adc_clock_init();
 
@@ -108,6 +110,7 @@ int main(void) {
         Slider sliderdata = io_read_slider();
         Touchpad touchpaddata = io_read_touchpad();
         Buttons buttondata = io_read_buttons();
+        menu_set_inputs(joystickdata, sliderdata, touchpaddata);
 
         // inputs to node 2
         uint8_t joy_data[3] = {joystickdata.x, joystickdata.y, joystickdata.btn};
@@ -126,12 +129,15 @@ int main(void) {
         // tell on the console when node 2 stops or starts answering
         if (sent != can_ok) {
             can_ok = sent;
+            menu_set_can_ok(sent);
             if (sent) {
                 console_log_P(PSTR("CAN: node 2 back"));
             } else {
                 console_log_P(PSTR("CAN: node 2 no answer"));
             }
         }
+
+        settings_task(now); // motor settings to node 2 (on change and every 2 s)
 
         menu_update(buttondata, now);
         menu_draw(now);
